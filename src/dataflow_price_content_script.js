@@ -11,8 +11,20 @@ var memory = 'Memory'
 var pd = 'PD'
 var ssd = 'SSD'
 
-var prices = {	'Batch':	{ cpu:0.059, memory:0.004172, pd:0.000054, ssd: 0.000298 },
-				'Streaming':{ cpu:0.072, memory:0.004172, pd:0.000054, ssd: 0.000298 }}
+var prices = {
+	'Batch': {
+		cpu: 0.059,
+		memory: 0.004172,
+		pd: 0.000054,
+		ssd: 0.000298
+	},
+	'Streaming': {
+		cpu: 0.072,
+		memory: 0.004172,
+		pd: 0.000054,
+		ssd: 0.000298
+	}
+}
 
 var enhancePanel = function () {
 	var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
@@ -20,7 +32,6 @@ var enhancePanel = function () {
 
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
-
 		var currentCPU = parseMetric(metrics[0].innerHTML)
 		var totalCPU = parseMetric(metrics[1].innerHTML)
 
@@ -36,8 +47,16 @@ var enhancePanel = function () {
 		var currentCostRow = firstRowOfMetrics.cloneNode(true);
 		var totalCostRow = firstRowOfMetrics.cloneNode(true);
 
-		var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
+		var pipelineOptions = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
+		var zone;
 
+		for (let child of pipelineOptions) {
+			if (child.innerHTML.trim() === 'zone') {
+				zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
+			}
+		}
+
+		var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
 		var pricesForJobType = prices[jobType];
 
 		var currentCost = currentCPU * pricesForJobType[cpu] + currentMemory * pricesForJobType[memory] + currentPD * pricesForJobType[pd] + currentSSD * pricesForJobType[ssd]
