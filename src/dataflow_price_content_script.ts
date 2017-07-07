@@ -6,7 +6,7 @@ class Size {
 		return new Size(parseFloat(parts[0]), parts[1]);
 	}
 
-	valueInGB(): number {
+	get valueInGB(): number {
 		switch (this.size) {
 			case 'B':
 				return this.value / (1024 ^ 3);
@@ -20,8 +20,37 @@ class Size {
 	}
 }
 
-function parseValue(metricString: string): number {
-	return parseFloat(metricString.trim().split(' ')[0]);
+class Metrics {
+
+	readonly currentCPU: number;
+	readonly totalCPU: number;
+
+	readonly currentMemory: Size;
+	readonly totalMemory: Size;
+
+	readonly currentPD: Size;
+	readonly totalPD: Size;
+
+	readonly currentSSD: Size;
+	readonly totalSSD: Size;
+
+	constructor(metrics: NodeListOf<Element>) {
+		this.currentCPU = this.parseValue(metrics[0].innerHTML);
+		this.totalCPU = this.parseValue(metrics[1].innerHTML);
+
+		this.currentMemory = Size.of(metrics[2].innerHTML);
+		this.totalMemory = Size.of(metrics[3].innerHTML);
+
+		this.currentPD = Size.of(metrics[4].innerHTML);
+		this.totalPD = Size.of(metrics[5].innerHTML);
+
+		this.currentSSD = Size.of(metrics[6].innerHTML);
+		this.totalSSD = Size.of(metrics[7].innerHTML);
+	}
+
+	private parseValue(metricString: string): number {
+		return parseFloat(metricString.trim().split(' ')[0]);
+	}
 }
 
 var prices: {};
@@ -52,19 +81,7 @@ function observeMeasures(callback: () => void): void {
 }
 
 var updateValues = function (currentCostRow: Element, totalCostRow: Element): void {
-	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
-
-	var currentCPU: number = parseValue(metrics[0].innerHTML)
-	var totalCPU: number = parseValue(metrics[1].innerHTML)
-
-	var currentMemory: Size = Size.of(metrics[2].innerHTML)
-	var totalMemory: Size = Size.of(metrics[3].innerHTML)
-
-	var currentPD: Size = Size.of(metrics[4].innerHTML)
-	var totalPD: Size = Size.of(metrics[5].innerHTML)
-
-	var currentSSD: Size = Size.of(metrics[6].innerHTML)
-	var totalSSD: Size = Size.of(metrics[7].innerHTML)
+	var metrics = new Metrics(document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span'));
 
 	var pipelineOptions: any = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
 	var zone: string;
@@ -73,21 +90,21 @@ var updateValues = function (currentCostRow: Element, totalCostRow: Element): vo
 			zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
 		}
 	}
-
-	var jobType: string = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
-
 	var continent: string = zone.split('-')[0];
 
-	var cpuPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
-	var memoryPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
-	var pdPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
-	var ssdPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
+	var jobType: string = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim().toUpperCase();
 
-	var currentCost: number = currentCPU * cpuPrice + currentMemory.valueInGB() * memoryPrice + currentPD.valueInGB() * pdPrice + currentSSD.valueInGB() * ssdPrice;
-	var totalCost: number = totalCPU * cpuPrice + totalMemory.valueInGB() * memoryPrice + totalPD.valueInGB() * pdPrice + totalSSD.valueInGB() * ssdPrice;
+	var cpuPrice: number = prices["CP-DATAFLOW-" + jobType + "-VCPU"][continent];
+	var memoryPrice: number = prices["CP-DATAFLOW-" + jobType + "-MEMORY"][continent];
+	var pdPrice: number = prices["CP-DATAFLOW-" + jobType + "-STORAGE-PD"][continent];
+	var ssdPrice: number = prices["CP-DATAFLOW-" + jobType + "-STORAGE-PD-SSD"][continent];
 
-	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost.toLocaleString('en-US', { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 }) + " /hr";
-	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost.toLocaleString('en-US', { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 });
+	var currentCost: number = metrics.currentCPU * cpuPrice + metrics.currentMemory.valueInGB * memoryPrice + metrics.currentPD.valueInGB * pdPrice + metrics.currentSSD.valueInGB * ssdPrice;
+	var totalCost: number = metrics.totalCPU * cpuPrice + metrics.totalMemory.valueInGB * memoryPrice + metrics.totalPD.valueInGB * pdPrice + metrics.totalSSD.valueInGB * ssdPrice;
+
+	let currencyFormat: Intl.NumberFormatOptions = { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 };
+	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost.toLocaleString('en-US', currencyFormat) + " /hr";
+	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost.toLocaleString('en-US', currencyFormat);
 }
 
 var enhancePanel = function (): void {

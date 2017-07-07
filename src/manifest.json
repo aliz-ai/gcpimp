@@ -5,8 +5,7 @@
 	"version": "0.1",
 	"content_scripts": [{
 		"matches": ["https://console.cloud.google.com/dataflow/job/*"],
-		"js": ["dataflow_price_content_script.js"],
-		"run_at": "document_end"
+		"js": ["dataflow_price_content_script.js"]
 	}],
 	"browser_action": {
 		"default_icon": {

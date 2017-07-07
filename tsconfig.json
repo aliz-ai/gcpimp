@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "target": "es5",
         "noImplicitAny": false,
         "strictNullChecks": false,
         "noImplicitThis": true,
@@ -9,7 +10,8 @@
         "sourceMap": true
     },
     "include": [
-        "src/**/*"
+        "src/**/*.ts",
+        "typings/**/*.ts"
     ],
     "exclude": [
         "node_modules",
