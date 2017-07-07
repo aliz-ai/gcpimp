@@ -155,7 +155,6 @@ function waitAndEnhance(): void {
 	}, enhancePanel);
 }
 
-
 waitAndEnhance();
 waitFor(() => {
 	var body = document.querySelector(".p6n-dax-graph");
