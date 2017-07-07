@@ -1,6 +1,5 @@
-function parseMetric(metricString) {
-	console.log("Parsed: " + metricString.trim().split(' ')[0])
-	return parseFloat(metricString.trim().split(' ')[0], 10)
+function parseMetric(metricString: string): number {
+	return parseFloat(metricString.trim().split(' ')[0]);
 }
 
 var prices;
@@ -30,64 +29,65 @@ function observeMeasures(callback) {
 	observer.observe(target, config);
 }
 
+var updateValues = function (currentCostRow, totalCostRow) {
+	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
+
+	var currentCPU = parseMetric(metrics[0].innerHTML)
+	var totalCPU = parseMetric(metrics[1].innerHTML)
+
+	var currentMemory = parseMetric(metrics[2].innerHTML)
+	var totalMemory = parseMetric(metrics[3].innerHTML)
+
+	var currentPD = parseMetric(metrics[4].innerHTML)
+	var totalPD = parseMetric(metrics[5].innerHTML)
+
+	var currentSSD = parseMetric(metrics[6].innerHTML)
+	var totalSSD = parseMetric(metrics[7].innerHTML)
+
+	var pipelineOptions = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
+	var zone;
+	for (let child of pipelineOptions) {
+		if (child.innerHTML.trim() === 'zone') {
+			zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
+		}
+	}
+
+	var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
+
+	var continent = zone.split('-')[0];
+
+	var cpuPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
+	var memoryPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
+	var pdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
+	var ssdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
+
+	var currentCost = currentCPU * cpuPrice + currentMemory * memoryPrice + currentPD * pdPrice + currentSSD * ssdPrice;
+	var totalCost = totalCPU * cpuPrice + totalMemory * memoryPrice + totalPD * pdPrice + totalSSD * ssdPrice;
+
+	currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
+	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost + " $/hr";
+	totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
+	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost + " $";
+}
+
 var enhancePanel = function () {
-	var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
-
-		var currentCPU = parseMetric(metrics[0].innerHTML)
-		var totalCPU = parseMetric(metrics[1].innerHTML)
-
-		console.log(metrics[0].innerHTML + " " + currentCPU)
-
-		var currentMemory = parseMetric(metrics[2].innerHTML)
-		var totalMemory = parseMetric(metrics[3].innerHTML)
-
-		var currentPD = parseMetric(metrics[4].innerHTML)
-		var totalPD = parseMetric(metrics[5].innerHTML)
-
-		var currentSSD = parseMetric(metrics[6].innerHTML)
-		var totalSSD = parseMetric(metrics[7].innerHTML)
+		var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 
 		var currentCostRow = firstRowOfMetrics.cloneNode(true);
 		var totalCostRow = firstRowOfMetrics.cloneNode(true);
 
-		var pipelineOptions = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
-		var zone;
-		for (let child of pipelineOptions) {
-			if (child.innerHTML.trim() === 'zone') {
-				zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
-			}
-		}
-
-		var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
-
-		console.log("JobType: " + jobType)
-
-		var continent = zone.split('-')[0];
-		console.log("Continent: " + continent)
-
-		var cpuPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
-		var memoryPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
-		var pdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
-		var ssdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
-
-
-		var currentCost = currentCPU * cpuPrice + currentMemory * memoryPrice + currentPD * pdPrice + currentSSD * ssdPrice
-		var totalCost = totalCPU * cpuPrice + totalMemory * memoryPrice + totalPD * pdPrice + totalSSD * ssdPrice
-
-		currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
-		currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost + " $/hr";
-
-		totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
 		totalCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
-		totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost + " $";
 
 		firstRowOfMetrics.parentNode.appendChild(currentCostRow);
 		firstRowOfMetrics.parentNode.appendChild(totalCostRow);
+
+		observeMeasures(() => updateValues(currentCostRow, totalCostRow));
+		updateValues(currentCostRow, totalCostRow);
 	}
 };
 
