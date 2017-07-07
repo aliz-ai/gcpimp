@@ -2,6 +2,18 @@ function parseMetric(metricString) {
 	return parseFloat(metricString.trim().split(' ')[0], 10)
 }
 
+
+var batchMode = 'Batch';
+var streamingMode = 'Streaming';
+
+var cpu = 'CPU'
+var memory = 'Memory'
+var pd = 'PD'
+var ssd = 'SSD'
+
+var prices = {	'Batch':	{ cpu:0.059, memory:0.004172, pd:0.000054, ssd: 0.000298 },
+				'Streaming':{ cpu:0.072, memory:0.004172, pd:0.000054, ssd: 0.000298 }}
+
 var enhancePanel = function () {
 	var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
@@ -24,12 +36,20 @@ var enhancePanel = function () {
 		var currentCostRow = firstRowOfMetrics.cloneNode(true);
 		var totalCostRow = firstRowOfMetrics.cloneNode(true);
 
+		var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
+
+		var pricesForJobType = prices[jobType];
+
+		var currentCost = currentCPU * pricesForJobType[cpu] + currentMemory * pricesForJobType[memory] + currentPD * pricesForJobType[pd] + currentSSD * pricesForJobType[ssd]
+		var totalCost = totalCPU * pricesForJobType[cpu] + totalMemory * pricesForJobType[memory] + totalPD * pricesForJobType[pd] + totalSSD * pricesForJobType[ssd]
+
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
-		currentCostRow.querySelector("dax-default-value span span").innerHTML = "SADASDASD";
+		currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost;
 
 		totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
 		totalCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
+		currentCostRow.querySelector("dax-default-value span span").innerHTML = totalCost;
 
 		firstRowOfMetrics.parentNode.appendChild(currentCostRow);
 		firstRowOfMetrics.parentNode.appendChild(totalCostRow);
