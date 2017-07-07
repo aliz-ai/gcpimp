@@ -3,40 +3,32 @@ function parseMetric(metricString) {
 	return parseFloat(metricString.trim().split(' ')[0], 10)
 }
 
-
-var batchMode = 'Batch';
-var streamingMode = 'Streaming';
-
-var cpu = 'CPU'
-var memory = 'Memory'
-var pd = 'PD'
-var ssd = 'SSD'
-
-var prices = {};
-
-prices[batchMode] = {};
-prices[batchMode][cpu] = 0.059;
-prices[batchMode][memory] = 0.004172;
-prices[batchMode][pd] = 0.000054;
-prices[batchMode][ssd] = 0.000298;
-
-prices[streamingMode] = {};
-prices[streamingMode][cpu] = 0.059
-prices[streamingMode][memory] = 0.004172
-prices[streamingMode][pd] = 0.000054
-prices[streamingMode][ssd] = 0.000298
-
-
 var prices;
 var xhr = new XMLHttpRequest();
-xhr.onreadystatechange = function() {
-                           if (xhr.readyState == 4) {
-                             	prices = JSON.parse(xhr.responseText)["gcp_price_list"];
-                           }
-                         }
+xhr.onreadystatechange = function () {
+	if (xhr.readyState == 4) {
+		prices = JSON.parse(xhr.responseText)["gcp_price_list"];
+	}
+}
 xhr.open("GET", 'https://cloudpricingcalculator.appspot.com/static/data/pricelist.json', true);
 xhr.send();
 
+function observeMeasures(callback) {
+	// select the target node
+	var target = document.querySelector('dax-service-metrics');
+
+	// create an observer instance
+	var observer = new MutationObserver(mutations => callback());
+
+	// configuration of the observer:
+	var config = {
+		characterData: true,
+		subtree: true
+	};
+
+	// pass in the target node, as well as the observer options
+	observer.observe(target, config);
+}
 
 var enhancePanel = function () {
 	var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
@@ -44,8 +36,11 @@ var enhancePanel = function () {
 
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
+
 		var currentCPU = parseMetric(metrics[0].innerHTML)
 		var totalCPU = parseMetric(metrics[1].innerHTML)
+
+		console.log(metrics[0].innerHTML + " " + currentCPU)
 
 		var currentMemory = parseMetric(metrics[2].innerHTML)
 		var totalMemory = parseMetric(metrics[3].innerHTML)
@@ -117,8 +112,7 @@ function waitFor(isPresent, callback) {
 function waitAndEnhance() {
 	waitFor(() => {
 		var list = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
-
-		return list !== undefined && list.length >= 8 && list[0].innerHTML.trim() !== '–' ;
+		return list !== undefined && list.length >= 8 && list[0].innerHTML.trim() !== '–';
 	}, enhancePanel);
 }
 
