@@ -26,11 +26,22 @@ prices[streamingMode][memory] = 0.004172
 prices[streamingMode][pd] = 0.000054
 prices[streamingMode][ssd] = 0.000298
 
+
+var prices;
+var xhr = new XMLHttpRequest();
+xhr.onreadystatechange = function() {
+                           if (xhr.readyState == 4) {
+                             	prices = JSON.parse(xhr.responseText)["gcp_price_list"];
+                           }
+                         }
+xhr.open("GET", 'https://cloudpricingcalculator.appspot.com/static/data/pricelist.json', true);
+xhr.send();
+
+
 var enhancePanel = function () {
 	var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
-	console.log("alma")
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
 		var currentCPU = parseMetric(metrics[0].innerHTML)
@@ -60,15 +71,17 @@ var enhancePanel = function () {
 
 		console.log("JobType: " + jobType)
 
-		var pricesForJobType = prices[jobType];
+		var continent = zone.split('-')[0];
+		console.log("Continent: " + continent)
 
-		console.log(cpu + " " + pricesForJobType[cpu])
-		console.log(memory + " " + pricesForJobType[memory])
-		console.log(pd + " " + pricesForJobType[pd])
-		console.log(ssd + " " + pricesForJobType[ssd])
+		var cpuPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
+		var memoryPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
+		var pdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
+		var ssdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
 
-		var currentCost = currentCPU * pricesForJobType[cpu] + currentMemory * pricesForJobType[memory] + currentPD * pricesForJobType[pd] + currentSSD * pricesForJobType[ssd]
-		var totalCost = totalCPU * pricesForJobType[cpu] + totalMemory * pricesForJobType[memory] + totalPD * pricesForJobType[pd] + totalSSD * pricesForJobType[ssd]
+
+		var currentCost = currentCPU * cpuPrice + currentMemory * memoryPrice + currentPD * pdPrice + currentSSD * ssdPrice
+		var totalCost = totalCPU * cpuPrice + totalMemory * memoryPrice + totalPD * pdPrice + totalSSD * ssdPrice
 
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();

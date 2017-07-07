@@ -15,5 +15,8 @@
 		"default_title": "GCP enhancer",
 		"default_popup": "popup.html"
 	},
-	"author": "Doctusoft Ltd"
+	"author": "Doctusoft Ltd",
+	"permissions": [
+		"https://cloudpricingcalculator.appspot.com/"
+	]
 }
