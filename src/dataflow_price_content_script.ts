@@ -1,4 +1,27 @@
-function parseMetric(metricString: string): number {
+class Size {
+	constructor(private readonly value: number, readonly size: string) { }
+
+	valueInGB(): number {
+		switch (this.size) {
+			case 'B':
+				return this.value / (1024 ^ 3);
+			case 'GB':
+				return this.value;
+			case 'TB':
+				return this.value * 1024;
+			default:
+				break;
+		}
+	}
+}
+
+function parseSize(size: string): Size {
+	let parts: string[] = size.trim().split(' ');
+	console.log(parts);
+	return new Size(parseFloat(parts[0]), parts[1]);
+}
+
+function parseValue(metricString: string): number {
 	return parseFloat(metricString.trim().split(' ')[0]);
 }
 
@@ -32,19 +55,19 @@ function observeMeasures(callback: () => void): void {
 var updateValues = function (currentCostRow: Element, totalCostRow: Element): void {
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
-	var currentCPU: number = parseMetric(metrics[0].innerHTML)
-	var totalCPU: number = parseMetric(metrics[1].innerHTML)
+	var currentCPU: number = parseValue(metrics[0].innerHTML)
+	var totalCPU: number = parseValue(metrics[1].innerHTML)
 
-	var currentMemory: number = parseMetric(metrics[2].innerHTML)
-	var totalMemory: number = parseMetric(metrics[3].innerHTML)
+	var currentMemory: Size = parseSize(metrics[2].innerHTML)
+	var totalMemory: Size = parseSize(metrics[3].innerHTML)
 
-	var currentPD: number = parseMetric(metrics[4].innerHTML)
-	var totalPD: number = parseMetric(metrics[5].innerHTML)
+	var currentPD: Size = parseSize(metrics[4].innerHTML)
+	var totalPD: Size = parseSize(metrics[5].innerHTML)
 
-	var currentSSD: number = parseMetric(metrics[6].innerHTML)
-	var totalSSD: number = parseMetric(metrics[7].innerHTML)
+	var currentSSD: Size = parseSize(metrics[6].innerHTML)
+	var totalSSD: Size = parseSize(metrics[7].innerHTML)
 
-	var pipelineOptions = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
+	var pipelineOptions: any = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
 	var zone: string;
 	for (let child of pipelineOptions) {
 		if (child.innerHTML.trim() === 'zone') {
@@ -52,21 +75,19 @@ var updateValues = function (currentCostRow: Element, totalCostRow: Element): vo
 		}
 	}
 
-	var jobType = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
+	var jobType: string = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim();
 
-	var continent = zone.split('-')[0];
+	var continent: string = zone.split('-')[0];
 
-	var cpuPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
-	var memoryPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
-	var pdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
-	var ssdPrice = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
+	var cpuPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-VCPU"][continent];
+	var memoryPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-MEMORY"][continent];
+	var pdPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD"][continent];
+	var ssdPrice: number = prices["CP-DATAFLOW-" + jobType.toUpperCase() + "-STORAGE-PD-SSD"][continent];
 
-	var currentCost = currentCPU * cpuPrice + currentMemory * memoryPrice + currentPD * pdPrice + currentSSD * ssdPrice;
-	var totalCost = totalCPU * cpuPrice + totalMemory * memoryPrice + totalPD * pdPrice + totalSSD * ssdPrice;
+	var currentCost: number = currentCPU * cpuPrice + currentMemory.valueInGB() * memoryPrice + currentPD.valueInGB() * pdPrice + currentSSD.valueInGB() * ssdPrice;
+	var totalCost: number = totalCPU * cpuPrice + totalMemory.valueInGB() * memoryPrice + totalPD.valueInGB() * pdPrice + totalSSD.valueInGB() * ssdPrice;
 
-	currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
 	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost + " $/hr";
-	totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
 	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost + " $";
 }
 
@@ -80,6 +101,8 @@ var enhancePanel = function (): void {
 		var currentCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
 		var totalCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
 
+		currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
+		totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
 		totalCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
 
