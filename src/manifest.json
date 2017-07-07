@@ -3,12 +3,11 @@
 	"name": "GCP enhancer by DS",
 	"description": "This extension adds extra functionality to various GCP console pages",
 	"version": "0.1",
-	"content_scripts": [
-		{
-			"matches": ["https://console.cloud.google.com/dataflow/job/*"],
-			"js": ["dataflow_price_content_script.js"]
-		}
-	],
+	"content_scripts": [{
+		"matches": ["https://console.cloud.google.com/dataflow/job/*"],
+		"js": ["dataflow_price_content_script.js"],
+		"run_at": "document_end"
+	}],
 	"browser_action": {
 		"default_icon": {
 			"85": "logo-85.png"
