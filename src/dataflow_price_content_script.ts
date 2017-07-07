@@ -155,12 +155,12 @@ function waitAndEnhance(): void {
 	}, enhancePanel);
 }
 
-window.addEventListener('load', () => {
-	waitAndEnhance();
-	waitFor(() => {
-		var body = document.querySelector(".p6n-dax-graph");
-		return body !== undefined && body !== null;
-	}, () => {
-		document.querySelector(".p6n-dax-graph").addEventListener('click', waitAndEnhance);
-	});
+
+waitAndEnhance();
+waitFor(() => {
+	var body = document.querySelector(".p6n-dax-graph");
+	return body !== undefined && body !== null;
+}, () => {
+	document.querySelector(".p6n-dax-graph").addEventListener('click', waitAndEnhance);
 });
+
