@@ -10,13 +10,8 @@
         "sourceMap": true
     },
     "include": [
-<<<<<<< 5e731244574093f6c85e3ad365a7c8663ff628ce
         "src/**/*.ts",
         "typings/**/*.ts"
-=======
-        "src/**/*",
-        "typings/**/*"
->>>>>>> Add background.js
     ],
     "exclude": [
         "node_modules",
