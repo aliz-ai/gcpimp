@@ -1,6 +1,11 @@
 class Size {
 	constructor(private readonly value: number, readonly size: string) { }
 
+	static of(size: string): Size {
+		let parts = size.trim().split(' ');
+		return new Size(parseFloat(parts[0]), parts[1]);
+	}
+
 	valueInGB(): number {
 		switch (this.size) {
 			case 'B':
@@ -13,12 +18,6 @@ class Size {
 				break;
 		}
 	}
-}
-
-function parseSize(size: string): Size {
-	let parts: string[] = size.trim().split(' ');
-	console.log(parts);
-	return new Size(parseFloat(parts[0]), parts[1]);
 }
 
 function parseValue(metricString: string): number {
@@ -58,14 +57,14 @@ var updateValues = function (currentCostRow: Element, totalCostRow: Element): vo
 	var currentCPU: number = parseValue(metrics[0].innerHTML)
 	var totalCPU: number = parseValue(metrics[1].innerHTML)
 
-	var currentMemory: Size = parseSize(metrics[2].innerHTML)
-	var totalMemory: Size = parseSize(metrics[3].innerHTML)
+	var currentMemory: Size = Size.of(metrics[2].innerHTML)
+	var totalMemory: Size = Size.of(metrics[3].innerHTML)
 
-	var currentPD: Size = parseSize(metrics[4].innerHTML)
-	var totalPD: Size = parseSize(metrics[5].innerHTML)
+	var currentPD: Size = Size.of(metrics[4].innerHTML)
+	var totalPD: Size = Size.of(metrics[5].innerHTML)
 
-	var currentSSD: Size = parseSize(metrics[6].innerHTML)
-	var totalSSD: Size = parseSize(metrics[7].innerHTML)
+	var currentSSD: Size = Size.of(metrics[6].innerHTML)
+	var totalSSD: Size = Size.of(metrics[7].innerHTML)
 
 	var pipelineOptions: any = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
 	var zone: string;
@@ -87,8 +86,8 @@ var updateValues = function (currentCostRow: Element, totalCostRow: Element): vo
 	var currentCost: number = currentCPU * cpuPrice + currentMemory.valueInGB() * memoryPrice + currentPD.valueInGB() * pdPrice + currentSSD.valueInGB() * ssdPrice;
 	var totalCost: number = totalCPU * cpuPrice + totalMemory.valueInGB() * memoryPrice + totalPD.valueInGB() * pdPrice + totalSSD.valueInGB() * ssdPrice;
 
-	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost + " $/hr";
-	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost + " $";
+	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost.toLocaleString('en-US', { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 }) + " /hr";
+	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost.toLocaleString('en-US', { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 });
 }
 
 var enhancePanel = function (): void {
