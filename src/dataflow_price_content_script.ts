@@ -2,7 +2,7 @@ function parseMetric(metricString: string): number {
 	return parseFloat(metricString.trim().split(' ')[0]);
 }
 
-var prices;
+var prices: {};
 var xhr = new XMLHttpRequest();
 xhr.onreadystatechange = function () {
 	if (xhr.readyState == 4) {
@@ -12,12 +12,12 @@ xhr.onreadystatechange = function () {
 xhr.open("GET", 'https://cloudpricingcalculator.appspot.com/static/data/pricelist.json', true);
 xhr.send();
 
-function observeMeasures(callback) {
+function observeMeasures(callback: () => void): void {
 	// select the target node
-	var target = document.querySelector('dax-service-metrics');
+	var target: Element = document.querySelector('dax-service-metrics');
 
 	// create an observer instance
-	var observer = new MutationObserver(mutations => callback());
+	var observer: MutationObserver = new MutationObserver(mutations => callback());
 
 	// configuration of the observer:
 	var config = {
@@ -29,23 +29,23 @@ function observeMeasures(callback) {
 	observer.observe(target, config);
 }
 
-var updateValues = function (currentCostRow, totalCostRow) {
+var updateValues = function (currentCostRow: Element, totalCostRow: Element): void {
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
-	var currentCPU = parseMetric(metrics[0].innerHTML)
-	var totalCPU = parseMetric(metrics[1].innerHTML)
+	var currentCPU: number = parseMetric(metrics[0].innerHTML)
+	var totalCPU: number = parseMetric(metrics[1].innerHTML)
 
-	var currentMemory = parseMetric(metrics[2].innerHTML)
-	var totalMemory = parseMetric(metrics[3].innerHTML)
+	var currentMemory: number = parseMetric(metrics[2].innerHTML)
+	var totalMemory: number = parseMetric(metrics[3].innerHTML)
 
-	var currentPD = parseMetric(metrics[4].innerHTML)
-	var totalPD = parseMetric(metrics[5].innerHTML)
+	var currentPD: number = parseMetric(metrics[4].innerHTML)
+	var totalPD: number = parseMetric(metrics[5].innerHTML)
 
-	var currentSSD = parseMetric(metrics[6].innerHTML)
-	var totalSSD = parseMetric(metrics[7].innerHTML)
+	var currentSSD: number = parseMetric(metrics[6].innerHTML)
+	var totalSSD: number = parseMetric(metrics[7].innerHTML)
 
 	var pipelineOptions = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
-	var zone;
+	var zone: string;
 	for (let child of pipelineOptions) {
 		if (child.innerHTML.trim() === 'zone') {
 			zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
@@ -70,15 +70,15 @@ var updateValues = function (currentCostRow, totalCostRow) {
 	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost + " $";
 }
 
-var enhancePanel = function () {
+var enhancePanel = function (): void {
 	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
-		var firstRowOfMetrics = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
+		var firstRowOfMetrics: Element = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 
-		var currentCostRow = firstRowOfMetrics.cloneNode(true);
-		var totalCostRow = firstRowOfMetrics.cloneNode(true);
+		var currentCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
+		var totalCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
 
 		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
 		totalCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
@@ -91,7 +91,7 @@ var enhancePanel = function () {
 	}
 };
 
-function waitFor(isPresent, callback) {
+function waitFor(isPresent: () => boolean, callback: () => void) {
 	if (isPresent()) {
 		callback();
 		return;
@@ -109,7 +109,7 @@ function waitFor(isPresent, callback) {
 	}, 1000);
 }
 
-function waitAndEnhance() {
+function waitAndEnhance(): void {
 	waitFor(() => {
 		var list = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 		return list !== undefined && list.length >= 8 && list[0].innerHTML.trim() !== '–';
