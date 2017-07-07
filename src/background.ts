@@ -3,3 +3,26 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
         chrome.tabs.executeScript(null, { file: "dataflow_price_content_script.js" });
     }
 });
+
+class AuthToken {
+
+    getAuthToken(): Promise<string> {
+        return new Promise<string>((resolve: (string) => void, reject: (any) => void) => {
+            chrome.identity.getAuthToken({
+                interactive: true,
+                scopes: ['https://www.googleapis.com/auth/bigquery', 'https://www.googleapis.com/auth/devstorage.full_control']
+            }, token => {
+                if (token === undefined) {
+                    reject("Error while getting token!");
+                } else {
+                    resolve(token);
+                }
+            });
+        });
+    }
+}
+
+chrome.identity.getAuthToken({
+    interactive: true,
+    scopes: ['https://www.googleapis.com/auth/bigquery', 'https://www.googleapis.com/auth/devstorage.full_control']
+}, console.log);
