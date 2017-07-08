@@ -23,6 +23,5 @@ waitFor(() => {
     var body = document.querySelector(".p6n-system-bar");
     return body !== undefined && body !== null;
 }, () => {
-    console.log((document.querySelector(".p6n-system-bar") as HTMLElement).style.backgroundColor);
     (document.querySelector(".p6n-system-bar") as HTMLElement).style.backgroundColor = "rgb(175, 36, 36)";
 });
