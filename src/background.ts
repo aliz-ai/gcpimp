@@ -9,6 +9,9 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (tab.url.search('https://console.cloud.google.com/logs/viewer') >= 0) {
         chrome.tabs.executeScript(tabId, { file: 'appengine_log_script.js' });
     }
+    if (tab.url.search('https://console.cloud.google.com/storage/browser') >= 0) {
+        chrome.tabs.executeScript(tabId, { file: 'storage_preview_script.js' });
+    }
 });
 
 class AuthToken {
@@ -30,17 +33,11 @@ class AuthToken {
 }
 
 chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    console.log(request);
-    console.log(sender);
-    if(request.subject === "authToken") {
-      console.log("Authenticating")
-      new AuthToken().getAuthToken().then(token => {
-        console.log("Token: " + token);
-        sendResponse({authToken: token});
-      } ).catch(console.log);
-      return true;
-    } else {
-      console.log("Unhandled message: " + request)
-    }
-  });
+    function (request, sender, sendResponse) {
+        if (request.subject === "authToken") {
+            new AuthToken().getAuthToken().then(token => {
+                sendResponse({ authToken: token });
+            });
+            return true;
+        }
+    });
