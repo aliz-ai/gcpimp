@@ -2,6 +2,10 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (tab.url.search('https://console.cloud.google.com/dataflow/job/') >= 0) {
         chrome.tabs.executeScript(tabId, { file: "dataflow_price_content_script.js" });
     }
+    if (tab.url.search('https://console.cloud.google.com/') >= 0 && tab.url.search('merkur-production') >= 0) {
+        chrome.tabs.executeScript(tabId, { file: "prod-color.js" });
+        // chrome.tabs.insertCSS(tabId, { file: "prod-color.css" });
+    }
     if (tab.url.search('https://console.cloud.google.com/logs/viewer') >= 0) {
         chrome.tabs.executeScript(tabId, { file: 'appengine_log_script.js' });
     }

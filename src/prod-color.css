@@ -1,0 +1,23 @@
+.modal-dialog-buttons .goog-buttonset-action,
+.modal-dialog-buttons .goog-buttonset-action:active,
+.jfk-button-action,
+.jfk-button-primary,
+.jfk-button-primary:active {
+    background-color: rgb(158, 11, 0) !important;
+    border-color: rgb(109, 7, 0) !important;
+}
+
+.md-button.md-default-theme.md-primary,
+.md-button.md-primary,
+md-tabs.md-default-theme .md-tab.md-active,
+md-tabs .md-tab.md-active,
+md-tabs.md-default-theme .md-tab.md-active md-icon,
+md-tabs .md-tab.md-active md-icon,
+md-tabs.md-default-theme .md-tab.md-focused,
+md-tabs .md-tab.md-focused,
+md-tabs.md-default-theme .md-tab.md-focused md-icon,
+md-tabs .md-tab.md-focused md-icon,
+.p6n-console-nav-panel pan-console-nav-item .md-button.p6n-console-nav-item-link-selected,
+.p6n-console-nav-panel pan-console-nav-item .md-button.p6n-console-nav-item-link-selected .p6n-console-nav-item-icon md-icon {
+    color: rgb(158, 11, 0) !important;
+}
