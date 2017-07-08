@@ -24,3 +24,19 @@ class AuthToken {
         });
     }
 }
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    console.log(request);
+    console.log(sender);
+    if(request.subject === "authToken") {
+      console.log("Authenticating")
+      new AuthToken().getAuthToken().then(token => {
+        console.log("Token: " + token);
+        sendResponse({authToken: token});
+      } ).catch(console.log);
+      return true;
+    } else {
+      console.log("Unhandled message: " + request)
+    }
+  });

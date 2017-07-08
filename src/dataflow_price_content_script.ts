@@ -161,5 +161,7 @@ waitFor(() => {
 	return body !== undefined && body !== null;
 }, () => {
 	document.querySelector(".p6n-dax-graph").addEventListener('click', waitAndEnhance);
+	document.querySelector(".p6n-dax-graph").addEventListener('click', getAuthToken);
+
 });
 
