@@ -20,7 +20,11 @@
 	"author": "Doctusoft Ltd",
 	"permissions": [
 		"https://console.cloud.google.com/",
+		"https://bigquery.cloud.google.com/",
+		"https://www.googleapis.com/",
 		"https://cloudpricingcalculator.appspot.com/",
+		"https://accounts.google.com/",
+		"https://accounts.google.com/o/oauth2/client_log",
 		"tabs",
 		"activeTab",
 		"identity"

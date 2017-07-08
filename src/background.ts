@@ -14,7 +14,11 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
         if (tab.url.search('https://console.cloud.google.com/storage/browser') >= 0) {
             chrome.tabs.executeScript(tabId, { file: 'storage_preview_script.js' });
         }
-    }
+        if (tab.url.search('https://bigquery.cloud.google.com/dataset') >= 0) {
+              chrome.tabs.executeScript(tabId, { file: 'bigquery_statistics.js' });
+        }
+  }   
+     
 });
 
 class AuthToken {
