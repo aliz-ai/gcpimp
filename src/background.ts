@@ -1,5 +1,6 @@
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-    // console.log(changeInfo);
+import { AuthToken } from './auth';
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete") {
         if (tab.url.search('https://console.cloud.google.com/dataflow/job/') >= 0) {
             chrome.tabs.executeScript(tabId, { file: "dataflow_price_content_script.js" });
@@ -15,29 +16,10 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
             chrome.tabs.executeScript(tabId, { file: 'storage_preview_script.js' });
         }
         if (tab.url.search('https://bigquery.cloud.google.com/dataset') >= 0) {
-              chrome.tabs.executeScript(tabId, { file: 'bigquery_statistics.js' });
+            chrome.tabs.executeScript(tabId, { file: 'bigquery_statistics.js' });
         }
-  }   
-     
-});
-
-class AuthToken {
-
-    getAuthToken(): Promise<string> {
-        return new Promise<string>((resolve: (string) => void, reject: (any) => void) => {
-            chrome.identity.getAuthToken({
-                interactive: true,
-                scopes: ['https://www.googleapis.com/auth/bigquery', 'https://www.googleapis.com/auth/devstorage.full_control']
-            }, token => {
-                if (token === undefined) {
-                    reject("Error while getting token!");
-                } else {
-                    resolve(token);
-                }
-            });
-        });
     }
-}
+});
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {

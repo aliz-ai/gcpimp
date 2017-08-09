@@ -1,0 +1,26 @@
+{
+  "name": "gcpimp",
+  "version": "1.0.0",
+  "description": "GCP Developer tools - Doctusoft Hackaton 2017",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Doctusoft/gcpimp.git"
+  },
+  "author": "Doctusoft",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Doctusoft/gcpimp/issues"
+  },
+  "homepage": "https://github.com/Doctusoft/gcpimp#readme",
+  "devDependencies": {
+    "@types/chrome": "0.0.47",
+    "@types/es6-promise": "0.0.32"
+  },
+  "dependencies": {
+    "es6-promise": "^4.1.1"
+  }
+}

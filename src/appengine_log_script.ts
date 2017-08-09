@@ -1,8 +1,8 @@
 //document.getElementsByTagName("header")[0].style.background = "lightblue";
 
-document.addEventListener("click", function () {
+document.addEventListener("click", () => {
 	var elements = document.getElementsByClassName("p6n-logs-json-key");
-	if (elements.length == 0) {
+	if (elements.length === 0) {
 		return;
 	}
 
