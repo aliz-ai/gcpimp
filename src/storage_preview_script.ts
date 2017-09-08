@@ -44,22 +44,14 @@ function createFilePreviewButton(menuCell: Element, fileName: string) {
 	menuCell.insertBefore(previewButton, menuCell.querySelector('pan-overflow-menu'));
 }
 
-function waitFor(isPresent: () => boolean, callback: () => void) {
-	if (isPresent()) {
-		callback();
-		return;
-	}
-	let time = 0;
-	const key = setInterval(function() {
-		if (isPresent() || time > 10000) {
-			clearInterval(key);
-			if (isPresent()) {
-				callback();
-			}
-			return;
-		}
-		time += 1000;
-	}, 1000);
+function waitFor(isPresent: () => boolean) {
+	return Promise.race([...Array(10)]
+		.map((u, idx) => idx * 100)
+		.map(time => new Promise(resolve =>
+			setTimeout(() => isPresent()
+				? resolve()
+				: undefined,
+				time))));
 }
 
 const update = () => page
@@ -67,7 +59,8 @@ const update = () => page
 	.filter(row => !!page.storageObjectsTableRowPreviewButton(row))
 	.forEach(row => createFilePreviewButton(page.storageObjectsTableRowMenuCell(row), page.storageObjectsTableRowFileName(row)));
 
-waitFor(() => !!page.storageObjectsTable(), () => {
-	observeDOM(update);
-	update();
-});
+waitFor(() => !!page.storageObjectsTable())
+	.then(() => {
+		observeDOM(update);
+		update();
+	});
