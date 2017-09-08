@@ -15,7 +15,9 @@
           true,
           "tabs"
         ],
-        "object-literal-sort-keys": false
+        "object-literal-sort-keys": false,
+        "member-ordering": false,
+        "max-line-length": [false]
     },
     "rulesDirectory": []
 }
