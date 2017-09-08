@@ -1,3 +1,5 @@
+import { waitFor } from './utils';
+
 class Page {
 	public storageObjectsTable = () => document.querySelector('#p6n-storage-objects-table');
 	public storageObjectsTableRows = () => Array.from(document.querySelectorAll('#p6n-storage-objects-table > tbody > tr'));
@@ -42,16 +44,6 @@ function createFilePreviewButton(menuCell: Element, fileName: string) {
 	previewButton.innerHTML = ' Preview file ';
 	previewButton.addEventListener('click', showFilePreviewOnClick(fileName));
 	menuCell.insertBefore(previewButton, menuCell.querySelector('pan-overflow-menu'));
-}
-
-function waitFor(isPresent: () => boolean) {
-	return Promise.race([...Array(10)]
-		.map((u, idx) => idx * 100)
-		.map(time => new Promise(resolve =>
-			setTimeout(() => isPresent()
-				? resolve()
-				: undefined,
-				time))));
 }
 
 const update = () => page
