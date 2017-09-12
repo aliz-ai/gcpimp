@@ -1,15 +1,35 @@
+import { waitFor } from './utils';
+
+class DataflowJobPage {
+	public readonly selector = {
+		metrics: 'dax-service-metrics',
+		defaultValueContent: 'dax-default-value span span',
+
+		list: 'div.p6n-kv-list',
+		listItem: 'div.p6n-kv-list-item',
+		listValues: 'div.p6n-kv-list-value span span',
+		listItemDefaultValue: 'dax-default-value span span',
+	};
+	public metrics = () => document.querySelector(this.selector.metrics);
+	public metricList = () => Array.from(document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span'));
+	public lists = () => Array.from(document.querySelectorAll(this.selector.list));
+	public pipelineOptionListItems = () => Array.from(this.lists()[3].querySelectorAll('div.p6n-kv-list-item'));
+	public jobSectionListItems = () => Array.from(document.querySelectorAll('dax-job-section div.p6n-kv-list div.p6n-kv-list-item'));
+}
+const page = new DataflowJobPage();
+
 class Size {
 	constructor(private readonly value: number, readonly size: string) { }
 
-	static of(size: string): Size {
-		let parts = size.trim().split(' ');
+	public static of(size: string): Size {
+		const parts = size.trim().split(' ');
 		return new Size(parseFloat(parts[0]), parts[1]);
 	}
 
 	get valueInGB(): number {
 		switch (this.size) {
 			case 'B':
-				return this.value / (1024 ^ 3);
+				return this.value / (1024 ** 3);
 			case 'GB':
 				return this.value;
 			case 'TB':
@@ -22,30 +42,38 @@ class Size {
 
 class Metrics {
 
-	readonly currentCPU: number;
-	readonly totalCPU: number;
+	public readonly currentCPU: number;
+	public readonly totalCPU: number;
 
-	readonly currentMemory: Size;
-	readonly totalMemory: Size;
+	public readonly currentMemory: Size;
+	public readonly totalMemory: Size;
 
-	readonly currentPD: Size;
-	readonly totalPD: Size;
+	public readonly currentPD: Size;
+	public readonly totalPD: Size;
 
-	readonly currentSSD: Size;
-	readonly totalSSD: Size;
+	public readonly currentSSD: Size;
+	public readonly totalSSD: Size;
 
-	constructor(metrics: NodeListOf<Element>) {
-		this.currentCPU = this.parseValue(metrics[0].innerHTML);
-		this.totalCPU = this.parseValue(metrics[1].innerHTML);
+	constructor(metrics: Element[]) {
+		const metricsContent = metrics.map(el => el.innerHTML);
 
-		this.currentMemory = Size.of(metrics[2].innerHTML);
-		this.totalMemory = Size.of(metrics[3].innerHTML);
+		[
+			this.currentCPU,
+			this.totalCPU,
+		] = metricsContent
+				.slice(0, 2)
+				.map(v => this.parseValue(v));
 
-		this.currentPD = Size.of(metrics[4].innerHTML);
-		this.totalPD = Size.of(metrics[5].innerHTML);
-
-		this.currentSSD = Size.of(metrics[6].innerHTML);
-		this.totalSSD = Size.of(metrics[7].innerHTML);
+		[
+			this.currentMemory,
+			this.totalMemory,
+			this.currentPD,
+			this.totalPD,
+			this.currentSSD,
+			this.totalSSD,
+		] = metricsContent
+				.slice(2)
+				.map(v => Size.of(v));
 	}
 
 	private parseValue(metricString: string): number {
@@ -53,74 +81,83 @@ class Metrics {
 	}
 }
 
-var prices: {};
-var xhr = new XMLHttpRequest();
-xhr.onreadystatechange = function () {
-	if (xhr.readyState == 4) {
-		prices = JSON.parse(xhr.responseText)["gcp_price_list"];
-	}
+interface GCPPrices {
+	[priceCategory: string]: {
+		[continent: string]: number;
+	};
 }
-xhr.open("GET", 'https://cloudpricingcalculator.appspot.com/static/data/pricelist.json', true);
-xhr.send();
+
+const pricesPromise = fetch('https://cloudpricingcalculator.appspot.com/static/data/pricelist.json')
+	.then(response => response.json())
+	.then(response => response.gcp_price_list as GCPPrices);
 
 function observeMeasures(callback: () => void): void {
-	// select the target node
-	var target: Element = document.querySelector('dax-service-metrics');
-
 	// create an observer instance
-	var observer: MutationObserver = new MutationObserver(mutations => callback());
+	const observer: MutationObserver = new MutationObserver(mutations => callback());
 
 	// configuration of the observer:
-	var config = {
+	const config = {
 		characterData: true,
-		subtree: true
+		subtree: true,
 	};
 
 	// pass in the target node, as well as the observer options
-	observer.observe(target, config);
+	observer.observe(page.metrics(), config);
 }
 
-var updateValues = function (currentCostRow: Element, totalCostRow: Element): void {
-	var metrics = new Metrics(document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span'));
+const updateValues = async (currentCostRow: Element, totalCostRow: Element) => {
+	const metrics = new Metrics(page.metricList());
 
-	var pipelineOptions: any = document.querySelectorAll(".p6n-vulcan-panel-content > div > div > div:nth-of-type(2) div.p6n-kv-list-key > span");
-	var zone: string;
-	for (let child of pipelineOptions) {
-		if (child.innerHTML.trim() === 'zone') {
-			zone = child.parentNode.parentNode.querySelector('dax-default-value span span').innerHTML.trim();
-		}
-	}
-	var continent: string = zone.split('-')[0];
+	const findValueByKey = (listItems: Element[], key) => listItems
+		.map(e => (e as HTMLElement).innerText)
+		.find(c => c.includes(key))
+		.split('\t')[1]
+		.trim();
 
-	var jobType: string = document.querySelectorAll('dax-job-section div.p6n-kv-list-values span span')[6].innerHTML.trim().toUpperCase();
+	const continent = findValueByKey(page.pipelineOptionListItems(), 'zone');
+	const jobType = findValueByKey(page.jobSectionListItems(), 'Job type');
 
-	var cpuPrice: number = prices["CP-DATAFLOW-" + jobType + "-VCPU"][continent];
-	var memoryPrice: number = prices["CP-DATAFLOW-" + jobType + "-MEMORY"][continent];
-	var pdPrice: number = prices["CP-DATAFLOW-" + jobType + "-STORAGE-PD"][continent];
-	var ssdPrice: number = prices["CP-DATAFLOW-" + jobType + "-STORAGE-PD-SSD"][continent];
+	const prices = await pricesPromise;
+	const cpuPrice: number = prices['CP-DATAFLOW-' + jobType + '-VCPU'][continent];
+	const memoryPrice: number = prices['CP-DATAFLOW-' + jobType + '-MEMORY'][continent];
+	const pdPrice: number = prices['CP-DATAFLOW-' + jobType + '-STORAGE-PD'][continent];
+	const ssdPrice: number = prices['CP-DATAFLOW-' + jobType + '-STORAGE-PD-SSD'][continent];
 
-	var currentCost: number = metrics.currentCPU * cpuPrice + metrics.currentMemory.valueInGB * memoryPrice + metrics.currentPD.valueInGB * pdPrice + metrics.currentSSD.valueInGB * ssdPrice;
-	var totalCost: number = metrics.totalCPU * cpuPrice + metrics.totalMemory.valueInGB * memoryPrice + metrics.totalPD.valueInGB * pdPrice + metrics.totalSSD.valueInGB * ssdPrice;
+	const currentCost: number = metrics.currentCPU * cpuPrice
+		+ metrics.currentMemory.valueInGB * memoryPrice
+		+ metrics.currentPD.valueInGB * pdPrice
+		+ metrics.currentSSD.valueInGB * ssdPrice;
 
-	let currencyFormat: Intl.NumberFormatOptions = { style: "currency", currency: "USD", currencyDisplay: "symbol", maximumFractionDigits: 2 };
-	currentCostRow.querySelector("dax-default-value span span").innerHTML = currentCost.toLocaleString('en-US', currencyFormat) + " /hr";
-	totalCostRow.querySelector("dax-default-value span span").innerHTML = totalCost.toLocaleString('en-US', currencyFormat);
-}
+	const totalCost: number = metrics.totalCPU * cpuPrice
+		+ metrics.totalMemory.valueInGB * memoryPrice
+		+ metrics.totalPD.valueInGB * pdPrice
+		+ metrics.totalSSD.valueInGB * ssdPrice;
 
-var enhancePanel = function (): void {
-	var metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
+	const currencyFormat: Intl.NumberFormatOptions = { style: 'currency', currency: 'USD', currencyDisplay: 'symbol', maximumFractionDigits: 2 };
+
+	currentCostRow
+		.querySelector(page.selector.defaultValueContent)
+		.innerHTML = currentCost.toLocaleString('en-US', currencyFormat) + ' /hr';
+
+	totalCostRow
+		.querySelector(page.selector.defaultValueContent)
+		.innerHTML = totalCost.toLocaleString('en-US', currencyFormat);
+};
+
+const enhancePanel = () => {
+	const metrics = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 
 	// this should be 8 or 9 by default, so we'll only add the properties once
 	if (metrics.length <= 9) {
-		var firstRowOfMetrics: Element = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
+		const firstRowOfMetrics: Element = document.querySelector('dax-service-metrics div.p6n-kv-list-item');
 
-		var currentCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
-		var totalCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
+		const currentCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
+		const totalCostRow: Element = firstRowOfMetrics.cloneNode(true) as Element;
 
-		currentCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Current cost ";
-		totalCostRow.querySelector("div.p6n-kv-list-key > span:first-child").innerHTML = " Total cost ";
-		currentCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
-		totalCostRow.querySelector("div.p6n-kv-list-key > span:last-child").remove();
+		currentCostRow.querySelector('div.p6n-kv-list-key > span:first-child').innerHTML = ' Current cost ';
+		totalCostRow.querySelector('div.p6n-kv-list-key > span:first-child').innerHTML = ' Total cost ';
+		currentCostRow.querySelector('div.p6n-kv-list-key > span:last-child').remove();
+		totalCostRow.querySelector('div.p6n-kv-list-key > span:last-child').remove();
 
 		firstRowOfMetrics.parentNode.appendChild(currentCostRow);
 		firstRowOfMetrics.parentNode.appendChild(totalCostRow);
@@ -130,36 +167,15 @@ var enhancePanel = function (): void {
 	}
 };
 
-function waitFor(isPresent: () => boolean, callback: () => void) {
-	if (isPresent()) {
-		callback();
-		return;
-	}
-	var time = 0;
-	var key = setInterval(function () {
-		if (isPresent() || time > 10000) {
-			clearInterval(key);
-			if (isPresent()) {
-				callback();
-			}
-			return;
-		}
-		time += 1000;
-	}, 1000);
-}
-
 function waitAndEnhance(): void {
 	waitFor(() => {
-		var list = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
+		const list = document.querySelectorAll('dax-service-metrics div.p6n-kv-list-value span span');
 		return list !== undefined && list.length >= 8 && list[0].innerHTML.trim() !== '–';
-	}, enhancePanel);
+	})
+		.then(enhancePanel);
 }
 
 waitAndEnhance();
-waitFor(() => {
-	var body = document.querySelector(".p6n-dax-graph");
-	return body !== undefined && body !== null;
-}, () => {
-	document.querySelector(".p6n-dax-graph").addEventListener('click', waitAndEnhance);
-});
-
+waitFor(() => !!document.querySelector('.p6n-dax-graph'))
+	.then(() => document.querySelector('.p6n-dax-graph')
+		.addEventListener('click', waitAndEnhance));

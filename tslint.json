@@ -17,7 +17,9 @@
         ],
         "object-literal-sort-keys": false,
         "member-ordering": false,
-        "max-line-length": [false]
+        "max-line-length": [false],
+        "max-classes-per-file": false,
+        "interface-name": false
     },
     "rulesDirectory": []
 }
