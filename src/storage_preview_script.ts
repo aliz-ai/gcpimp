@@ -1,83 +1,57 @@
+import { waitFor } from './utils';
+
+class Page {
+	public storageObjectsTable = () => document.querySelector('#p6n-storage-objects-table');
+	public storageObjectsTableRows = () => Array.from(document.querySelectorAll('#p6n-storage-objects-table > tbody > tr'));
+	public storageObjectsTableRowMenuCell = (row: Element) => row.querySelector('td:nth-child(8)');
+	public storageObjectsTableRowFileName = (row: Element) => row.querySelector('td:nth-child(2) pre').innerHTML.trim();
+	public storageObjectsTableRowPreviewButton = (row: Element) => row.querySelector('td:nth-child(8) button');
+}
+const page = new Page();
+
 function observeDOM(callback: () => void): void {
-    // select the target node
-    var target: Element = document.querySelector('#p6n-storage-objects-table');
+	// create an observer instance
+	const observer: MutationObserver = new MutationObserver(mutations => callback());
 
-    // create an observer instance
-    var observer: MutationObserver = new MutationObserver(mutations => callback());
+	// configuration of the observer:
+	const config = {
+		childList: true,
+		characterData: true,
+		subtree: true,
+	};
 
-    // configuration of the observer:
-    var config = {
-        childList: true,
-        characterData: true,
-        subtree: true
-    };
-
-    // pass in the target node, as well as the observer options
-    observer.observe(target, config);
+	// pass in the target node, as well as the observer options
+	observer.observe(page.storageObjectsTable(), config);
 }
 
-function waitFor(isPresent: () => boolean, callback: () => void) {
-    if (isPresent()) {
-        callback();
-        return;
-    }
-    var time = 0;
-    var key = setInterval(function () {
-        if (isPresent() || time > 10000) {
-            clearInterval(key);
-            if (isPresent()) {
-                callback();
-            }
-            return;
-        }
-        time += 1000;
-    }, 1000);
+const showFilePreviewOnClick = fileName => () =>
+	chrome.runtime.sendMessage({ subject: 'authToken' }, async response => {
+		if (!response) {
+			console.error(chrome.runtime.lastError);
+		} else {
+			const [_, bucket, path] = window.location.href.match('https://console.cloud.google.com/storage/browser/([^/]+)/([^?]*)');
+			const fileUrl = 'https://www.googleapis.com/storage/v1/b/' + bucket + '/o/' + path + fileName;
+			const baseHeaders = { Authorization: 'Bearer ' + response.authToken };
+			const fileResponse = await fetch(fileUrl, { headers: new Headers(baseHeaders) }).then(res => res.json());
+			const contentResponse = await fetch(fileResponse.mediaLink, { headers: new Headers(Object.assign({ Range: 'bytes=0-5120' }, baseHeaders)) });
+			console.log(contentResponse);
+		}
+	});
+
+function createFilePreviewButton(menuCell: Element, fileName: string) {
+	const previewButton = document.createElement('button');
+	previewButton.innerHTML = ' Preview file ';
+	previewButton.addEventListener('click', showFilePreviewOnClick(fileName));
+	menuCell.insertBefore(previewButton, menuCell.querySelector('pan-overflow-menu'));
 }
 
-waitFor(() => {
-    var body = document.querySelector('#p6n-storage-objects-table');
-    return body !== undefined && body !== null;
-}, () => {
-    let update = () => {
-        var rows = (document.querySelectorAll('#p6n-storage-objects-table > tbody > tr') as any) as Element[];
-        for (let row of rows) {
-            let menuTd = row.querySelector('td:nth-child(8)');
-            let fileName = row.querySelector('td:nth-child(2) pre').innerHTML.trim();
+const update = () => page
+	.storageObjectsTableRows()
+	.filter(row => !!page.storageObjectsTableRowPreviewButton(row))
+	.forEach(row => createFilePreviewButton(page.storageObjectsTableRowMenuCell(row), page.storageObjectsTableRowFileName(row)));
 
-            let previewButton = menuTd.querySelector('button');
-            if (previewButton !== null) {
-                continue;
-            }
-            previewButton = document.createElement("button");
-            previewButton.innerHTML = " Preview file ";
-            previewButton.addEventListener('click', () => {
-                chrome.runtime.sendMessage({ subject: 'authToken' }, response => {
-                    if (response === undefined) {
-                        console.error(chrome.runtime.lastError);
-                    } else {
-                        let matches = window.location.href.match('https://console.cloud.google.com/storage/browser/([^/]+)/([^?]*)');
-                        let bucket = matches[1];
-                        let path = matches[2];
-                        var xhr = new XMLHttpRequest();
-                        xhr.addEventListener("load", () => {
-                            var contentLoad = new XMLHttpRequest();
-                            contentLoad.addEventListener("load", () => {
-                                console.log(contentLoad.response);
-                            });
-                            contentLoad.open("GET", JSON.parse(xhr.response).mediaLink);
-                            contentLoad.setRequestHeader("Authorization", "Bearer " + response.authToken);
-                            contentLoad.setRequestHeader("Range", "bytes=0-5120");
-                            contentLoad.send();
-                        });
-                        xhr.open("GET", 'https://www.googleapis.com/storage/v1/b/' + bucket + '/o/' + path + fileName, true);
-                        xhr.setRequestHeader("Authorization", "Bearer " + response.authToken);
-                        xhr.send();
-                    }
-                });
-            });
-            menuTd.insertBefore(previewButton, menuTd.querySelector('pan-overflow-menu'));
-        }
-    };
-    observeDOM(update);
-    update();
-})
+waitFor(() => !!page.storageObjectsTable())
+	.then(() => {
+		observeDOM(update);
+		update();
+	});

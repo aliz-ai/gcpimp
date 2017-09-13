@@ -4,7 +4,21 @@
   "description": "GCP Developer tools - Doctusoft Hackaton 2017",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean:dist": "rimraf dist",
+    "clean:packaged": "rimraf packaged",
+    "clean": "run-p clean:*",
+    "build:ts": "webpack",
+    "build:copy-assets": "cpx src/assets/**/* dist/assets",
+    "build:copy-css": "cpx src/**/*.css dist",
+    "build:manifest": "cpx src/manifest.json dist",
+    "build:html": "cpx src/**/*.html dist",
+    "build": "run-p build:*",
+    "package:keygen": "crx keygen",
+    "package:move-key": "cpx key.pem packaged && rimraf key.pem",
+    "package:crx": "crx pack dist -o gcpimp.crx -p packaged/key.pem",
+    "package:move": "cpx gcpimp.crx packaged && rimraf gcpimp.crx",
+    "package": "run-s clean build package:*"
   },
   "repository": {
     "type": "git",
@@ -18,9 +32,14 @@
   "homepage": "https://github.com/Doctusoft/gcpimp#readme",
   "devDependencies": {
     "@types/chrome": "0.0.47",
-    "@types/es6-promise": "0.0.32"
+    "crx": "^3.2.1",
+    "npm-run-all": "^4.1.1",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.7.0",
+    "typescript": "^2.5.2",
+    "cpx": "^1.5.0",
+    "webpack": "^3.5.6",
+    "ts-loader": "^2.3.7"
   },
-  "dependencies": {
-    "es6-promise": "^4.1.1"
-  }
+  "dependencies": {}
 }

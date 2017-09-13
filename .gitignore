@@ -1,4 +1,5 @@
 .idea
-*.js
-*.js.map
+dist
+packaged
 node_modules/
+gcpimp.crx
