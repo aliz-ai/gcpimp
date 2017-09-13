@@ -118,10 +118,11 @@ const updateValues = async (currentCostRow: Element, totalCostRow: Element) => {
 	const jobType = findValueByKey(page.jobSectionListItems(), 'Job type');
 
 	const prices = await pricesPromise;
-	const cpuPrice: number = prices['CP-DATAFLOW-' + jobType + '-VCPU'][continent];
-	const memoryPrice: number = prices['CP-DATAFLOW-' + jobType + '-MEMORY'][continent];
-	const pdPrice: number = prices['CP-DATAFLOW-' + jobType + '-STORAGE-PD'][continent];
-	const ssdPrice: number = prices['CP-DATAFLOW-' + jobType + '-STORAGE-PD-SSD'][continent];
+	const priceOf = item => prices['CP-DATAFLOW-' + jobType + '-' + item][continent];
+	const cpuPrice: number = priceOf('VCPU');
+	const memoryPrice: number = priceOf('MEMORY');
+	const pdPrice: number = priceOf('STORAGE-PD');
+	const ssdPrice: number = priceOf('STORAGE-PD-SSD');
 
 	const currentCost: number = metrics.currentCPU * cpuPrice
 		+ metrics.currentMemory.valueInGB * memoryPrice

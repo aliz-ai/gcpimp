@@ -9,10 +9,10 @@
 	},
 	"browser_action": {
 		"default_icon": {
-			"85": "gcpimplogo.png",
-			"16": "gcpimplogo16.png",
-			"48": "gcpimplogo48.png",
-			"128": "gcpimplogo128.png"
+			"85": "assets/gcpimplogo.png",
+			"16": "assets/gcpimplogo16.png",
+			"48": "assets/gcpimplogo48.png",
+			"128": "assets/gcpimplogo128.png"
 		},
 		"default_title": "GCP enhancer",
 		"default_popup": "popup.html"

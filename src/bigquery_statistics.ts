@@ -1,51 +1,37 @@
-function getAuthToken(resolve: (x: string) => void) {
-	chrome.runtime.sendMessage({ subject: 'authToken' }, response => {
-		console.log('Response: ' + response);
-		if (!response) {
-			console.log(chrome.runtime.lastError);
-		} else {
-			console.log('Token aquired: ' + response.authToken);
-			return resolve(response.authToken);
-		}
-	});
-}
+export async function enrichBigQueryStatistics() {
+	const authResponse = await new Promise<any>(resolve => chrome.runtime.sendMessage({ subject: 'authToken' }, resolve));
+	if (!authResponse) {
+		return;
+	}
 
-chrome.runtime.sendMessage({ subject: 'authToken' }, response => {
-	if (response === undefined) {
-		console.error(chrome.runtime.lastError);
-	} else {
+	console.log('Dataset.......... ');
+	const url = document.location.href;
 
-		console.log('Dataset.......... ');
-		const url = document.location.href;
+	const [projectId, datasetId] = url.substr(url.lastIndexOf('/') + 1).split(':');
+	console.log('Project: ' + projectId);
+	console.log('Dataset: ' + datasetId);
 
-		const projectAndDataset = url.substr(url.lastIndexOf('/') + 1).split(':');
-
-		const xhr = new XMLHttpRequest();
-		const projectId = projectAndDataset[0];
-		const datasetId = projectAndDataset[1];
-
-		console.log('Project: ' + projectId);
-		console.log('Dataset: ' + datasetId);
-
-		xhr.onreadystatechange = () => {
-			if (xhr.readyState === 4) {
-				console.log(xhr.responseText);
-				const newRow = document.querySelectorAll('.dataset-view tbody tr')[1].cloneNode(true);
-				newRow.querySelectorAll('td')[0].innerHTML = 'Data size';
-				newRow.querySelectorAll('td')[1].innerHTML = parseFloat(JSON.parse(xhr.responseText).rows[0].f[0].v, 10) / 1024 / 1024 / 1024 + ' GB';
-				document.querySelector('.dataset-view tbody').appendChild(newRow);
-
-			}
-		};
-		xhr.open('POST', 'https://www.googleapis.com/bigquery/v2/projects/' + projectId + '/queries', true);
-		xhr.setRequestHeader('Authorization', 'Bearer ' + response.authToken);
-		xhr.setRequestHeader('content-type', 'application/json');
-
-		xhr.send(JSON.stringify({
+	const sizeQueryUrl = 'https://www.googleapis.com/bigquery/v2/projects/' + projectId + '/queries';
+	const sizeQueryResponse = await fetch(sizeQueryUrl, {
+		method: 'POST',
+		headers: new Headers({
+			'Authorization': 'Bearer ' + authResponse.authToken,
+			'content-type': 'application/json',
+		}),
+		body: JSON.stringify({
 			query: 'select sum(size_bytes) as size from [' + projectId + ':' + datasetId + '.__TABLES__]',
 			kind: 'bigquery#queryRequest',
 			useLegacySql: true,
-		}));
+		}),
+	});
 
-	}
-});
+	const responseBody = await sizeQueryResponse.json();
+	console.log(responseBody);
+	const newRow = document.querySelectorAll('.dataset-view tbody tr')[1].cloneNode(true) as Element;
+	const [infoTableKey, infoTableValue] = newRow.querySelectorAll('td');
+	infoTableKey.innerHTML = 'Data size';
+	infoTableValue.innerHTML = parseFloat(responseBody.rows[0].f[0].v) / 1024 / 1024 / 1024 + ' GB';
+	document.querySelector('.dataset-view tbody').appendChild(newRow);
+}
+
+enrichBigQueryStatistics();

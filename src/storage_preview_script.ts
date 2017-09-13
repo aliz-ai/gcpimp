@@ -25,17 +25,16 @@ function observeDOM(callback: () => void): void {
 }
 
 const showFilePreviewOnClick = fileName => () =>
-	chrome.runtime.sendMessage({ subject: 'authToken' }, response => {
+	chrome.runtime.sendMessage({ subject: 'authToken' }, async response => {
 		if (!response) {
 			console.error(chrome.runtime.lastError);
 		} else {
 			const [_, bucket, path] = window.location.href.match('https://console.cloud.google.com/storage/browser/([^/]+)/([^?]*)');
 			const fileUrl = 'https://www.googleapis.com/storage/v1/b/' + bucket + '/o/' + path + fileName;
 			const baseHeaders = { Authorization: 'Bearer ' + response.authToken };
-			fetch(fileUrl, { headers: new Headers(baseHeaders) })
-				.then(res => res.json())
-				.then(res => fetch(res.mediaLink, { headers: new Headers(Object.assign({ Range: 'bytes=0-5120' }, baseHeaders)) }))
-				.then(contentResponse => console.log(contentResponse));
+			const fileResponse = await fetch(fileUrl, { headers: new Headers(baseHeaders) }).then(res => res.json());
+			const contentResponse = await fetch(fileResponse.mediaLink, { headers: new Headers(Object.assign({ Range: 'bytes=0-5120' }, baseHeaders)) });
+			console.log(contentResponse);
 		}
 	});
 
