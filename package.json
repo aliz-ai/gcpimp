@@ -8,8 +8,9 @@
     "clean:dist": "rimraf dist",
     "clean:packaged": "rimraf packaged",
     "clean": "run-p clean:*",
-    "build:ts": "tsc",
+    "build:ts": "webpack",
     "build:copy-assets": "cpx src/assets/**/* dist/assets",
+    "build:copy-css": "cpx src/**/*.css dist",
     "build:manifest": "cpx src/manifest.json dist",
     "build:html": "cpx src/**/*.html dist",
     "build": "run-p build:*",
@@ -36,7 +37,9 @@
     "rimraf": "^2.6.2",
     "tslint": "^5.7.0",
     "typescript": "^2.5.2",
-    "cpx": "^1.5.0"
+    "cpx": "^1.5.0",
+    "webpack": "^3.5.6",
+    "ts-loader": "^2.3.7"
   },
   "dependencies": {}
 }

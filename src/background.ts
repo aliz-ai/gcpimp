@@ -15,8 +15,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	scriptsForUrls
 		.filter(script => script.urls
 			.every(url => tab.url.includes(url)))
-		.forEach(script => chrome.tabs
-			.executeScript(tabId, { file: script.file }));
+		.forEach(script => {
+			chrome.tabs.executeScript(tabId, { file: 'vendor.js' });
+			chrome.tabs.executeScript(tabId, { file: script.file });
+		});
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

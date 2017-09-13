@@ -4,7 +4,7 @@
 	"description": "This extension adds extra functionality to various GCP console pages",
 	"version": "0.1",
 	"background": {
-		"scripts": ["background.js"],
+		"scripts": ["vendor.js", "background.js"],
 		"persistent": false
 	},
 	"browser_action": {
