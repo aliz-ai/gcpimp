@@ -1,4 +1,4 @@
-import { AuthToken } from './auth';
+import './auth';
 
 const scriptsForUrls = Object.freeze<{ urls: string[], file: string }[]>([
 	{ urls: ['https://console.cloud.google.com/dataflow/job/'], file: 'dataflow_price_content_script.js' },
@@ -19,11 +19,4 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 			chrome.tabs.executeScript(tabId, { file: 'vendor.js' });
 			chrome.tabs.executeScript(tabId, { file: script.file });
 		});
-});
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if (request.subject === 'authToken') {
-		new AuthToken().getAuthToken().then(token => sendResponse({ authToken: token }));
-		return true;
-	}
 });
