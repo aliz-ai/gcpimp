@@ -1,4 +1,6 @@
 .idea
+.cache
+.vscode
 dist
 packaged
 node_modules/

@@ -6,13 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean:dist": "rimraf dist",
+    "clean:cache": "rimraf .cache",
     "clean:packaged": "rimraf packaged",
     "clean": "run-p clean:*",
-    "build:ts": "webpack",
-    "build:copy-assets": "cpx src/assets/**/* dist/assets",
-    "build:copy-css": "cpx src/**/*.css dist",
-    "build:manifest": "cpx src/manifest.json dist",
-    "build:html": "cpx src/**/*.html dist",
+    "build:cs-toolbar": "parcel build ./src/content-scripts/custom-toolbar-color.ts",
+    "build:popup-html": "parcel build ./src/popup.html",
     "build": "run-p build:*",
     "package:keygen": "crx keygen",
     "package:move-key": "cpx key.pem packaged && rimraf key.pem",
@@ -31,15 +29,17 @@
   },
   "homepage": "https://github.com/Doctusoft/gcpimp#readme",
   "devDependencies": {
-    "@types/chrome": "0.0.47",
-    "crx": "^3.2.1",
-    "npm-run-all": "^4.1.1",
-    "rimraf": "^2.6.2",
-    "tslint": "^5.7.0",
-    "typescript": "^2.5.2",
+    "@types/chrome": "0.0.69",
     "cpx": "^1.5.0",
-    "webpack": "^3.5.6",
-    "ts-loader": "^2.3.7"
+    "crx": "^3.2.1",
+    "npm-run-all": "^4.1.3",
+    "parcel": "^1.9.3",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "browserlist": [
+    "last 2 Chrome versions"
+  ]
 }

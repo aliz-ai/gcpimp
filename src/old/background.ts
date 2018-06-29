@@ -1,4 +1,4 @@
-import './auth';
+import './old/auth';
 
 const scriptsForUrls = Object.freeze<{ urls: string[], file: string }[]>([
 	{ urls: ['https://console.cloud.google.com/dataflow/job/'], file: 'dataflow_price_content_script.js' },

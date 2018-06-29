@@ -3,19 +3,22 @@
 	"name": "GCP enhancer by DS",
 	"description": "This extension adds extra functionality to various GCP console pages",
 	"version": "0.1",
-	"background": {
-		"scripts": ["vendor.js", "background.js"],
-		"persistent": false
-	},
+  "content_scripts": [
+    {
+      "matches": ["https://console.cloud.google.com/*"],
+      "js": ["./dist/custom-toolbar-color.js"]
+
+    }
+  ],
 	"browser_action": {
 		"default_icon": {
-			"85": "assets/gcpimplogo.png",
-			"16": "assets/gcpimplogo16.png",
-			"48": "assets/gcpimplogo48.png",
-			"128": "assets/gcpimplogo128.png"
+			"85":  "./src/assets/gcpimplogo.png",
+			"16":  "./src/assets/gcpimplogo16.png",
+			"48":  "./src/assets/gcpimplogo48.png",
+			"128": "./src/assets/gcpimplogo128.png"
 		},
 		"default_title": "GCP enhancer",
-		"default_popup": "popup.html"
+		"default_popup": "./dist/popup.html"
 	},
 	"author": "Doctusoft Ltd",
 	"permissions": [
@@ -27,7 +30,8 @@
 		"https://accounts.google.com/o/oauth2/client_log",
 		"tabs",
 		"activeTab",
-		"identity"
+    "identity",
+    "storage"
 	],
 	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA00IvaXHD6j1SKtcwBBpKoAinD6QH9PmNGaN5ky6YmUQWSYpMOTU0GyRcg1NGsALN2Sm9JevDQRV98ZK+oXolLjj/qKnGL4Yy+NpmJPUpig6sQSob53dZxmOS4YTf1w3i2VpFqWe2TDpbcupRifHXmxHqsRJo0uvWgNV7GQPZM3fEoMms6hRzHWjR//IECUoKyctXHC3Jsj8I8wGzygEjMelYhOlpfyPWwjozo5sL+epYdzrnk7FjJ3+4aocBFLhXvT4delSzYut1gawacVO+XzSdsSR+9b9tbVzTfq06e01XBpdFX2MNYSzoOivFrxbb5jK0af7rZtqQnu8HsSuqVwIDAQAB",
 	"oauth2": {
