@@ -13,11 +13,9 @@
     "build:cs-toolbar": "parcel build ./src/content-scripts/custom-toolbar-color.ts",
     "build:popup-html": "parcel build ./src/popup/popup.html --public-url ./",
     "build": "run-p build:*",
-    "package:keygen": "crx keygen",
-    "package:move-key": "cpx key.pem packaged && rimraf key.pem",
-    "package:crx": "crx pack dist -o gcpimp.crx -p packaged/key.pem",
-    "package:move": "cpx gcpimp.crx packaged && rimraf gcpimp.crx",
-    "package": "run-s clean build package:*"
+    "zip": "bestzip gcpimp.zip manifest.json dist",
+    "package": "run-s clean build zip",
+    "watch:popup-html": "parcel watch ./src/popup/popup.html --public-url ./"
   },
   "repository": {
     "type": "git",
@@ -33,8 +31,8 @@
     "@types/chrome": "0.0.69",
     "@types/react": "^16.4.6",
     "@types/react-dom": "^16.0.6",
-    "cpx": "^1.5.0",
-    "crx": "^3.2.1",
+    "bestzip": "^1.1.4",
+    "node-sass": "^4.9.0",
     "npm-run-all": "^4.1.3",
     "parcel": "^1.9.4",
     "rimraf": "^2.6.2",
@@ -43,7 +41,8 @@
   },
   "dependencies": {
     "react": "^16.4.1",
-    "react-dom": "^16.4.1"
+    "react-dom": "^16.4.1",
+    "react-md": "^1.4.1"
   },
   "browserlist": [
     "last 2 Chrome versions"

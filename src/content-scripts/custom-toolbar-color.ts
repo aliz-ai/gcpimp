@@ -20,7 +20,6 @@ async function customizeToolbarColor() {
 customizeToolbarColor();
 
 chrome.runtime.onMessage.addListener(message => {
-	console.log(message);
 	if (message.type === MessageType.CONFIG_UPDATE) {
 		customizeToolbarColor();
 	}
