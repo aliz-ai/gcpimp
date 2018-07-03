@@ -1,15 +1,38 @@
-import { configService } from '../config.service';
+import { configService } from '../common/config.service';
+import { MessageType } from '../common/message';
+import { getProjectId } from '../common/utils';
 
 const TOOLBAR_SELECTOR = '.pcc-platform-bar-container';
 
-async function customizeToolbarColor() {
-	const url = new URL(document.location.href);
-	const projectId = url.searchParams.get('project');
+const defaultToolbarColor: string = document.querySelector<HTMLElement>(TOOLBAR_SELECTOR).style.backgroundColor;
 
-	const color = await configService.getCustomToolbarColor(projectId);
+async function customizeToolbarColor() {
+	const projectId = getProjectId(document.location.href);
+
+	const color = await configService.getCustomToolbarColor(projectId) || defaultToolbarColor;
 
 	const toolbar = document.querySelector<HTMLElement>(TOOLBAR_SELECTOR);
+
 	toolbar.style.backgroundColor = color;
+	toolbar.style.transition = 'background-color 0.5s linear';
 }
 
 customizeToolbarColor();
+
+chrome.runtime.onMessage.addListener(message => {
+	console.log(message);
+	if (message.type === MessageType.CONFIG_UPDATE) {
+		customizeToolbarColor();
+	}
+});
+
+let oldHref = document.location.href;
+const body = document.querySelector('body');
+const observer = new MutationObserver(() => {
+	if (oldHref !== document.location.href) {
+		oldHref = document.location.href;
+		customizeToolbarColor();
+	}
+});
+
+observer.observe(body, { childList: true, attributes: true, subtree: true });

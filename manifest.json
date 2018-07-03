@@ -23,19 +23,9 @@
 	"author": "Doctusoft Ltd",
 	"permissions": [
 		"https://console.cloud.google.com/",
-		"https://bigquery.cloud.google.com/",
-		"https://www.googleapis.com/",
 		"https://cloudpricingcalculator.appspot.com/",
-		"https://accounts.google.com/",
-		"https://accounts.google.com/o/oauth2/client_log",
 		"tabs",
 		"activeTab",
-    "identity",
     "storage"
-	],
-	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA00IvaXHD6j1SKtcwBBpKoAinD6QH9PmNGaN5ky6YmUQWSYpMOTU0GyRcg1NGsALN2Sm9JevDQRV98ZK+oXolLjj/qKnGL4Yy+NpmJPUpig6sQSob53dZxmOS4YTf1w3i2VpFqWe2TDpbcupRifHXmxHqsRJo0uvWgNV7GQPZM3fEoMms6hRzHWjR//IECUoKyctXHC3Jsj8I8wGzygEjMelYhOlpfyPWwjozo5sL+epYdzrnk7FjJ3+4aocBFLhXvT4delSzYut1gawacVO+XzSdsSR+9b9tbVzTfq06e01XBpdFX2MNYSzoOivFrxbb5jK0af7rZtqQnu8HsSuqVwIDAQAB",
-	"oauth2": {
-		"client_id": "587753390108-8psejr11d0i4el8bromlt4r82t97gutb.apps.googleusercontent.com",
-		"scopes": ["profile"]
-	}
+	]
 }

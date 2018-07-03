@@ -1,11 +1,10 @@
+import { MessageType } from './message';
 
 export interface Storage {
 	toolbarColor: {
 		[projectId: string]: string;
 	};
 }
-
-const DEFAULT_CUSTOM_TOOLBAR_COLOR = '#85144b';
 
 type StorageKeys = keyof Storage;
 
@@ -17,22 +16,33 @@ export class ConfigService {
 	private storageSyncSet = (storage: Partial<Storage>) =>
 		new Promise(resolve => chrome.storage.sync.set(storage, resolve))
 
-	public async setCustomToolbarColor(domain: string, color: string) {
+	public async setCustomToolbarColor(projectId: string, color: string) {
 		const storage = await this.storageSyncGet('toolbarColor');
 		await this.storageSyncSet({
 			toolbarColor: {
 				...storage.toolbarColor,
-				[domain]: color,
+				[projectId]: color,
 			},
 		});
+		this.sendUpdateToContentScripts();
 	}
 
 	public async getCustomToolbarColor(projectId: string)  {
 		const storage = await this.storageSyncGet('toolbarColor');
 		if (!storage.toolbarColor) {
-			return DEFAULT_CUSTOM_TOOLBAR_COLOR;
+			return undefined;
 		}
-		return storage.toolbarColor[projectId] || DEFAULT_CUSTOM_TOOLBAR_COLOR;
+		return storage.toolbarColor[projectId];
+	}
+
+	public sendUpdateToContentScripts() {
+		chrome.tabs.query({
+			discarded: false,
+			status: 'complete',
+			url: '*://console.cloud.google.com/*',
+		}, tabs =>
+				tabs.forEach(tab =>
+					chrome.tabs.sendMessage(tab.id, { type: MessageType.CONFIG_UPDATE })));
 	}
 }
 
