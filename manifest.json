@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "GCP enhancer by DS",
 	"description": "This extension adds extra functionality to various GCP console pages",
-	"version": "0.1",
+	"version": "0.1.1",
   "content_scripts": [
     {
       "matches": ["https://console.cloud.google.com/*"],

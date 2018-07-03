@@ -13,7 +13,7 @@
     "build:cs-toolbar": "parcel build ./src/content-scripts/custom-toolbar-color.ts",
     "build:popup-html": "parcel build ./src/popup/popup.html --public-url ./",
     "build": "run-p build:*",
-    "zip": "bestzip gcpimp.zip manifest.json dist",
+    "zip": "bestzip gcpimp.zip manifest.json dist src/assets",
     "package": "run-s clean build zip",
     "watch:popup-html": "parcel watch ./src/popup/popup.html --public-url ./"
   },
