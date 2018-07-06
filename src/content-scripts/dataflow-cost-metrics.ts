@@ -1,3 +1,5 @@
+import { format, parse } from 'bytes';
+import { billingService, DataflowCostMetricPrices } from '../common/billing.service';
 
 const daxServiceMetrics = 'dax-service-metrics';
 const list = '.p6n-kv-list';
@@ -50,6 +52,15 @@ async function findListItemValue(key: string) {
 	const findListItems = () => Array.from(document.querySelectorAll('.' + listItem)).find(el => el.textContent.includes(key)) as HTMLElement;
 	const regionListItem = await elementLoaded(findListItems, document.body);
 	const regionListItemValue = regionListItem.querySelector('.p6n-kv-list-value') as HTMLDivElement;
+	if (regionListItemValue.innerText.trim() === '–') {
+		await new Promise(res => {
+			const observer = new MutationObserver(() => {
+				observer.disconnect();
+				res();
+			});
+			observer.observe(regionListItemValue, { characterData: true });
+		});
+	}
 	const regionValue = regionListItemValue.innerText.trim();
 	return regionValue;
 }
@@ -70,22 +81,39 @@ async function findRegion() {
 	return Promise.race([zoneRegion, overriddenRegion, defaultRegion]);
 }
 
+const gbValue = (value: string) => Number.parseFloat(
+	format(parse(value.replace('hr', '')), { unit: 'GB', unitSeparator: ' ' }).split(' ')[0]);
+
 function calculateCurrentCost() {
 	return 'TODO';
 }
 
-function calculateTotalCost() {
-	return 'TODO';
+async function calculateTotalCost(prices: DataflowCostMetricPrices) {
+	const totalPDTime = gbValue(await findListItemValue('Total PD time'));
+	const totalPDSSDTime = gbValue(await findListItemValue('Total SSD PD time'));
+	const totalMemoryTime = gbValue(await findListItemValue('Total memory time'));
+	const totalVCPUTime = Number.parseFloat((await findListItemValue('Total vCPU time')).split(' ')[0]);
+
+	const jobType = await findListItemValue('Job type');
+	const cpuPrice = jobType === 'Batch' ? prices.vCPUTimeBatch : prices.vCPUTimeStreaming;
+	debugger;
+	const cost =
+		totalPDTime * prices.localDiskTimePdStandard +
+		totalPDSSDTime * prices.localDiskTimePDSSD +
+		totalMemoryTime * prices.ramTime +
+		totalVCPUTime * cpuPrice;
+	return cost.toFixed(2);
 }
 
 async function appendCostMetrics() {
 	await elementLoaded(getDaxServiceMetrics);
 	await elementLoaded(getList, getDaxServiceMetrics());
 	const region = await findRegion();
+	const prices = await billingService.getDataflowCostMetricsPrices(region);
 
 	const listEl = getList();
 	listEl.appendChild(createListItem('Current cost', calculateCurrentCost()));
-	listEl.appendChild(createListItem('Total cost', calculateTotalCost()));
+	listEl.appendChild(createListItem('Total cost', await calculateTotalCost(prices)));
 }
 
 appendCostMetrics();

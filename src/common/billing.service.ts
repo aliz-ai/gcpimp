@@ -26,6 +26,14 @@ interface GoogleSKUPricingInfo {
 	effectiveTime: string;
 }
 
+export interface DataflowCostMetricPrices {
+		vCPUTimeBatch: number;
+		vCPUTimeStreaming: number;
+		localDiskTimePdStandard: number;
+		localDiskTimePDSSD: number;
+		ramTime: number;
+}
+
 interface GoogleSKU {
 	name: string;
 	skuId: string;
@@ -38,31 +46,32 @@ interface GoogleSKU {
 
 const API_KEY = 'AIzaSyBZVfVwDKpduSuNOJlvWildIeQ5AsNtnWM';
 
+let services: GoogleService[];
+let dataflowPrices: GoogleSKU[];
+
 class BillingService {
-	private services: GoogleService[];
-	private dataflowPrices: GoogleSKU[];
 
 	private async listServices() {
 		const response = await fetch(`https://cloudbilling.googleapis.com/v1/services?key=${API_KEY}`);
 		const serviceList: { services: GoogleService[] } = await response.json();
-		this.services = serviceList.services;
-		return this.services;
+		services = serviceList.services;
+		return services;
 	}
 
 	private async getDataflowServiceId() {
-		const services = this.services || await this.listServices();
-		return services.find(svc => svc.displayName === 'Cloud Dataflow').serviceId;
+		const currentServices = services || await this.listServices();
+		return currentServices.find(svc => svc.displayName === 'Cloud Dataflow').serviceId;
 	}
 
 	private async listDataflowPrices() {
-		if (this.dataflowPrices) {
-			return this.dataflowPrices;
+		if (dataflowPrices) {
+			return dataflowPrices;
 		}
 		const serviceId = await this.getDataflowServiceId();
 		const response = await fetch(`https://cloudbilling.googleapis.com/v1/services/${serviceId}/skus?key=${API_KEY}`);
 		const body: { skus: GoogleSKU[] } = await response.json();
-		this.dataflowPrices = body.skus;
-		return this.dataflowPrices;
+		dataflowPrices = body.skus;
+		return dataflowPrices;
 	}
 
 	public async getDataflowCostMetricsPrices(region: string) {
@@ -74,7 +83,7 @@ class BillingService {
 			localDiskTimePdStandard: 1,
 			localDiskTimePDSSD: 1,
 			ramTime: 1,
-		};
+		} as DataflowCostMetricPrices;
 	}
 
 }
