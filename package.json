@@ -11,6 +11,7 @@
     "clean": "run-p clean:*",
     "build:clean-dist": "rimraf dist",
     "build:cs-toolbar": "parcel build ./src/content-scripts/custom-toolbar-color.ts",
+    "build:cs-cost-metrics": "parcel build ./src/content-scripts/dataflow-cost-metrics.ts",
     "build:popup-html": "parcel build ./src/popup/popup.html --public-url ./",
     "build": "run-p build:*",
     "zip": "bestzip gcpimp.zip manifest.json dist src/assets",

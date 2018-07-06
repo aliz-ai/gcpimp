@@ -8,6 +8,11 @@
       "matches": ["https://console.cloud.google.com/*"],
       "js": ["./dist/custom-toolbar-color.js"]
 
+    },
+    {
+      "matches": ["https://console.cloud.google.com/dataflow/jobsDetail/*"],
+      "js": ["./dist/dataflow-cost-metrics.js"]
+
     }
   ],
 	"browser_action": {
