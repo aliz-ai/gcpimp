@@ -1,3 +1,4 @@
+const NANOS = 1e-9;
 
 interface GoogleService {
 	name: string;
@@ -18,7 +19,7 @@ interface GoogleSKUPricingInfo {
 			unitPrice: {
 				currencyCode: string;
 				units: string;
-				nanos: string;
+				nanos: number;
 			},
 		}[];
 	};
@@ -26,12 +27,17 @@ interface GoogleSKUPricingInfo {
 	effectiveTime: string;
 }
 
+interface CostMetricPrice {
+	amount: number;
+	currencyCode: string;
+}
+
 export interface DataflowCostMetricPrices {
-		vCPUTimeBatch: number;
-		vCPUTimeStreaming: number;
-		localDiskTimePdStandard: number;
-		localDiskTimePDSSD: number;
-		ramTime: number;
+		vCPUTimeBatch: CostMetricPrice;
+		vCPUTimeStreaming: CostMetricPrice;
+		localDiskTimePdStandard: CostMetricPrice;
+		localDiskTimePDSSD: CostMetricPrice;
+		ramTime: CostMetricPrice;
 }
 
 interface GoogleSKU {
@@ -74,16 +80,25 @@ class BillingService {
 		return dataflowPrices;
 	}
 
-	public async getDataflowCostMetricsPrices(region: string) {
+	private getPrice(service: string, prices: GoogleSKU[]): CostMetricPrice {
+		const sku = prices.find(s => s.description.includes(service));
+		const unitPrice = sku.pricingInfo[0].pricingExpression.tieredRates[0].unitPrice;
+		return {
+			amount: unitPrice.nanos * NANOS,
+			currencyCode: unitPrice.currencyCode,
+		};
+	}
+
+	public async getDataflowCostMetricsPrices(region: string): Promise<DataflowCostMetricPrices> {
 		const prices = await this.listDataflowPrices();
 		const regionalPrices = prices.filter(sku => sku.serviceRegions.includes(region));
 		return {
-			vCPUTimeBatch: 1,
-			vCPUTimeStreaming: 1,
-			localDiskTimePdStandard: 1,
-			localDiskTimePDSSD: 1,
-			ramTime: 1,
-		} as DataflowCostMetricPrices;
+			vCPUTimeBatch: this.getPrice('vCPU Time Batch', regionalPrices),
+			vCPUTimeStreaming: this.getPrice('vCPU Time Streaming', regionalPrices),
+			localDiskTimePdStandard: this.getPrice('Local Disk Time PD Standard', regionalPrices),
+			localDiskTimePDSSD: this.getPrice('Local Disk Time PD SSD', regionalPrices),
+			ramTime: this.getPrice('RAM Time', regionalPrices),
+		};
 	}
 
 }
