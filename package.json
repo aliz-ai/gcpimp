@@ -1,0 +1,50 @@
+{
+  "name": "gcpimp",
+  "version": "1.0.0",
+  "description": "GCP Developer tools - Doctusoft Hackaton 2017",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean:dist": "rimraf dist",
+    "clean:cache": "rimraf .cache",
+    "clean:packaged": "rimraf packaged",
+    "clean": "run-p clean:*",
+    "build:clean-dist": "rimraf dist",
+    "build:cs-toolbar": "parcel build ./src/content-scripts/custom-toolbar-color.ts",
+    "build:popup-html": "parcel build ./src/popup/popup.html --public-url ./",
+    "build": "run-p build:*",
+    "zip": "bestzip gcpimp.zip manifest.json dist src/assets",
+    "package": "run-s clean build zip",
+    "watch:popup-html": "parcel watch ./src/popup/popup.html --public-url ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Doctusoft/gcpimp.git"
+  },
+  "author": "Doctusoft",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Doctusoft/gcpimp/issues"
+  },
+  "homepage": "https://github.com/Doctusoft/gcpimp#readme",
+  "devDependencies": {
+    "@types/chrome": "0.0.69",
+    "@types/react": "^16.4.6",
+    "@types/react-dom": "^16.0.6",
+    "bestzip": "^1.1.4",
+    "node-sass": "^4.9.0",
+    "npm-run-all": "^4.1.3",
+    "parcel": "^1.9.4",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
+  },
+  "dependencies": {
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-md": "^1.4.1"
+  },
+  "browserlist": [
+    "last 2 Chrome versions"
+  ]
+}

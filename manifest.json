@@ -1,0 +1,31 @@
+{
+	"manifest_version": 2,
+	"name": "GCP enhancer by DS",
+	"description": "This extension adds extra functionality to various GCP console pages",
+	"version": "0.1.1",
+  "content_scripts": [
+    {
+      "matches": ["https://console.cloud.google.com/*"],
+      "js": ["./dist/custom-toolbar-color.js"]
+
+    }
+  ],
+	"browser_action": {
+		"default_icon": {
+			"85":  "./src/assets/gcpimplogo.png",
+			"16":  "./src/assets/gcpimplogo16.png",
+			"48":  "./src/assets/gcpimplogo48.png",
+			"128": "./src/assets/gcpimplogo128.png"
+		},
+		"default_title": "GCP enhancer",
+		"default_popup": "./dist/popup.html"
+	},
+	"author": "Doctusoft Ltd",
+	"permissions": [
+		"https://console.cloud.google.com/",
+		"https://cloudpricingcalculator.appspot.com/",
+		"tabs",
+		"activeTab",
+    "storage"
+	]
+}

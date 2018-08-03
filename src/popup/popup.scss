@@ -1,0 +1,45 @@
+@import '../../node_modules/react-md/src/scss/react-md';
+
+$md-primary-color: $md-teal-500;
+$md-secondary-color: $md-deep-orange-900;
+
+@include react-md-everything;
+
+body {
+	padding: 0;
+	margin: 0;
+	width: 300px;
+}
+
+.color-row {
+	display: flex;
+	flex-flow: row nowrap;
+}
+
+.sample-color {
+	cursor: pointer;
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: white;
+	height: 32px;
+}
+
+.popup-content {
+	padding: 16px;
+	display: flex;
+	flex-flow: column nowrap;
+}
+
+.custom-color {
+	height: 32px;
+	margin: 0 4px 0 8px;
+}
+
+.reset {
+	height: 32px;
+	width: 32px;
+	padding: 4px;
+	margin-left: 4px;
+}
