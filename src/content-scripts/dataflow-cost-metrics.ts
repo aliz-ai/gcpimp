@@ -48,56 +48,71 @@ async function elementLoaded<T>(supplier: () => T, parentElement = document.body
 const selectorLoaded = (selector: string, parentElement: HTMLElement) =>
 	elementLoaded(() => parentElement.querySelector(selector), parentElement);
 
-async function findListItemValue(key: string) {
-	const findListItems = () => Array.from(document.querySelectorAll('.' + listItemClassName)).find(el => el.textContent.includes(key)) as HTMLElement;
-	const listItem = await elementLoaded(findListItems, document.body);
-	const listItemValue = listItem.querySelector('.p6n-kv-list-value') as HTMLDivElement;
-	if (listItemValue.innerText.trim() === '–') {
-		await new Promise(res => {
-			const observer = new MutationObserver(() => {
-				observer.disconnect();
-				res();
-			});
-			observer.observe(listItemValue, { characterData: true });
-		});
-	}
-	const regionValue = listItemValue.innerText.trim();
-	return regionValue;
-}
-
-async function findRegion() {
-	const zoneToRegion = (zone: string) => {
-		if (!zone) {
-			return;
-		}
-		const zoneParts = zone.split('-');
-		zoneParts.splice(-1, 1);
-		return zoneParts.join('-');
-	};
-	const zoneRegion = findListItemValue('zone').then(zoneToRegion);
-	const overriddenRegion = findListItemValue('region');
-	const defaultRegion = findListItemValue('Region');
-
-	return Promise.race([zoneRegion, overriddenRegion, defaultRegion]);
-}
-
-const gbValue = (value: string) => Number.parseFloat(
-	format(parse(value.replace('hr', '').trim()), { unit: 'GB', unitSeparator: ' ' }).split(' ')[0]);
-
-const cutEndingHr = (s: string) => s.replace('hr', '');
-
-const getCpuPrice = async (prices: DataflowCostMetricPrices) => {
-	const jobType = await findListItemValue('Job type');
-	return jobType === 'Batch' ? prices.vCPUTimeBatch : prices.vCPUTimeStreaming;
+type JobProperties = Record<string, string> & {
+	zone?: string;
+	region?: string;
+	Region?: string;
+	'Job type'?: 'Streaming' | 'Batch';
+	'Current PD'?: string;
+	'Current SSD PD'?: string;
+	'Current memory'?: string;
+	'Current vCPUs'?: string;
+	'Total PD time'?: string;
+	'Total SSD PD time'?: string;
+	'Total memory time'?: string;
+	'Total vCPU time'?: string;
 };
 
-async function calculateCurrentCost(prices: DataflowCostMetricPrices) {
-	const currentPD = gbValue(await findListItemValue('Current PD'));
-	const currentPDSSD = gbValue(await findListItemValue('Current PD SSD'));
-	const currentMemory = gbValue(await findListItemValue('Current memory'));
-	const currentVCPUs = Number.parseFloat(await findListItemValue('Current vCPUs'));
+function getJobProperties(): JobProperties {
+	const listItems = Array.from(document.querySelectorAll('.' + listItemClassName));
+	const itemValueMap: JobProperties = {};
+	listItems.forEach(item => {
+		const keyEl = item.querySelector('.p6n-kv-list-key>div, .p6n-kv-list-key>span');
+		if (!keyEl) {
+			return;
+		}
+		const key = keyEl.textContent.trim();
+		const value = item.querySelector('.p6n-kv-list-value').textContent.trim();
+		itemValueMap[key] = value;
+	});
+	return itemValueMap;
+}
 
-	const cpuPrice = await getCpuPrice(prices);
+const zoneToRegion = (zone: string) => {
+	if (!zone) {
+		return;
+	}
+	const zoneParts = zone.split('-');
+	zoneParts.splice(-1, 1);
+	return zoneParts.join('-');
+};
+
+function findRegion(jobProperties = getJobProperties()) {
+	const zoneRegion = jobProperties.zone ? zoneToRegion(jobProperties.zone) : undefined;
+	const overriddenRegion = jobProperties.region;
+	const defaultRegion = jobProperties.Region;
+
+	return zoneRegion || overriddenRegion || defaultRegion;
+}
+
+const gbValue = (value: string) => {
+	const valueStripped = (value || '').replace('hr', '').trim();
+	const parseGBValueToBytes = parse(valueStripped);
+	const formatBytesToGBString = format(parseGBValueToBytes, { unit: 'GB', unitSeparator: ' ' });
+	const stringGbValue = (formatBytesToGBString || '').split(' ')[0];
+	return Number.parseFloat(stringGbValue);
+};
+
+const getCpuPrice = (prices: DataflowCostMetricPrices, job: JobProperties) =>
+	job['Job type'] === 'Batch' ? prices.vCPUTimeBatch : prices.vCPUTimeStreaming;
+
+function calculateCurrentCost(prices: DataflowCostMetricPrices, job = getJobProperties()) {
+	const currentPD = gbValue(job['Current PD'] || '');
+	const currentPDSSD = gbValue(job['Current SSD PD'] || '');
+	const currentMemory = gbValue(job['Current memory'] || '');
+	const currentVCPUs = Number.parseFloat(job['Current vCPUs'] || '');
+
+	const cpuPrice = getCpuPrice(prices, job);
 
 	const cost =
 		currentPD * prices.localDiskTimePdStandard.amount +
@@ -105,16 +120,16 @@ async function calculateCurrentCost(prices: DataflowCostMetricPrices) {
 		currentMemory * prices.ramTime.amount +
 		currentVCPUs * cpuPrice.amount;
 
-	return cost.toFixed(2) + ' ' + prices.ramTime.currencyCode;
+	return cost.toFixed(2) + ' ' + prices.ramTime.currencyCode + '/ hr';
 }
 
-async function calculateTotalCost(prices: DataflowCostMetricPrices) {
-	const totalPDTime = gbValue(await findListItemValue('Total PD time'));
-	const totalPDSSDTime = gbValue(await findListItemValue('Total SSD PD time'));
-	const totalMemoryTime = gbValue(await findListItemValue('Total memory time'));
-	const totalVCPUTime = Number.parseFloat((await findListItemValue('Total vCPU time')).split(' ')[0]);
+function calculateTotalCost(prices: DataflowCostMetricPrices, job = getJobProperties()) {
+	const totalPDTime = gbValue(job['Total PD time'] || '');
+	const totalPDSSDTime = gbValue(job['Total SSD PD time'] || '');
+	const totalMemoryTime = gbValue(job['Total memory time'] || '');
+	const totalVCPUTime = Number.parseFloat((job['Total vCPU time'] || '').split(' ')[0]);
 
-	const cpuPrice = await getCpuPrice(prices);
+	const cpuPrice = getCpuPrice(prices, job);
 
 	const cost =
 		totalPDTime * prices.localDiskTimePdStandard.amount +
@@ -127,18 +142,19 @@ async function calculateTotalCost(prices: DataflowCostMetricPrices) {
 async function appendCostMetrics() {
 	await elementLoaded(getDaxServiceMetrics);
 	await elementLoaded(getList, getDaxServiceMetrics());
-	const region = await findRegion();
+	const job = getJobProperties();
+	const region = findRegion(job);
+	if (!region) {
+		return;
+	}
 	const prices = await billingService.getDataflowCostMetricsPrices(region);
 
 	const listEl = getList();
 
-	const currentCost = calculateCurrentCost(prices);
-	const totalCost = calculateTotalCost(prices);
-
-	await Promise.all([
-		currentCost.then(cost => listEl.appendChild(createListItem('Current cost', cost))),
-		totalCost.then(cost => listEl.appendChild(createListItem('Total cost', cost))),
-	]);
+	const currentCost = calculateCurrentCost(prices, job);
+	const totalCost = calculateTotalCost(prices, job);
+	listEl.appendChild(createListItem('Current cost', currentCost));
+	listEl.appendChild(createListItem('Total cost', totalCost));
 }
 
 const removeAddedCostMetrics = () =>
@@ -147,15 +163,12 @@ const removeAddedCostMetrics = () =>
 async function listenToMetricsChanges() {
 	await elementLoaded(getDaxServiceMetrics);
 	await elementLoaded(getList, getDaxServiceMetrics());
-	const listEl = getList();
-	const observer = new MutationObserver(() => {
-		observer.disconnect();
+
+	return setInterval(() => {
 		removeAddedCostMetrics();
 		appendCostMetrics();
-		observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-	});
-	observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+	}, 1000);
 }
 
 appendCostMetrics();
-// listenToMetricsChanges();
+listenToMetricsChanges();

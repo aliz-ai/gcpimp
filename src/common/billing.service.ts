@@ -82,6 +82,9 @@ class BillingService {
 
 	private getPrice(service: string, prices: GoogleSKU[]): CostMetricPrice {
 		const sku = prices.find(s => s.description.includes(service));
+		if (!sku) {
+			throw new Error('Couldn\'t find sku for service:' + service + ' among: ' + prices);
+		}
 		const unitPrice = sku.pricingInfo[0].pricingExpression.tieredRates[0].unitPrice;
 		return {
 			amount: unitPrice.nanos * NANOS,
