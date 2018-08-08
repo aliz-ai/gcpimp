@@ -1,6 +1,6 @@
 import { configService } from '../common/config.service';
 import { MessageType } from '../common/message';
-import { getProjectId } from '../common/utils';
+import { getProjectId, onUrlChange } from '../common/utils';
 
 const TOOLBAR_SELECTOR = '.pcc-platform-bar-container';
 
@@ -25,13 +25,4 @@ chrome.runtime.onMessage.addListener(message => {
 	}
 });
 
-let oldHref = document.location.href;
-const body = document.querySelector('body');
-const observer = new MutationObserver(() => {
-	if (oldHref !== document.location.href) {
-		oldHref = document.location.href;
-		customizeToolbarColor();
-	}
-});
-
-observer.observe(body, { childList: true, attributes: true, subtree: true });
+onUrlChange(() => customizeToolbarColor());
