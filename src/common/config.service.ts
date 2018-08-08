@@ -1,9 +1,11 @@
+import { CurrencyCode } from './currency-codes';
 import { MessageType } from './message';
 
+type ProjectId = string;
+
 export interface Storage {
-	toolbarColor: {
-		[projectId: string]: string;
-	};
+	toolbarColor: Record<ProjectId, string>;
+	currencyCode: CurrencyCode;
 }
 
 type StorageKeys = keyof Storage;
@@ -33,6 +35,15 @@ export class ConfigService {
 			return undefined;
 		}
 		return storage.toolbarColor[projectId];
+	}
+
+	public async getCurrencyCode() {
+		return (await this.storageSyncGet('currencyCode')).currencyCode;
+	}
+
+	public async setCurrencyCode(currencyCode: CurrencyCode) {
+		await this.storageSyncSet({ currencyCode });
+		this.sendUpdateToContentScripts();
 	}
 
 	public sendUpdateToContentScripts() {

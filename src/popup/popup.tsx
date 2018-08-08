@@ -1,9 +1,14 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom';
+import { Autocomplete } from 'react-md/lib/Autocompletes';
 import { Button } from 'react-md/lib/Buttons';
+import { Divider } from 'react-md/lib/Dividers';
+import { FontIcon } from 'react-md/lib/FontIcons';
 import { Paper } from 'react-md/lib/Papers';
+import { SelectField } from 'react-md/lib/SelectFields';
 import { Toolbar } from 'react-md/lib/Toolbars';
 import { configService } from '../common/config.service';
+import { CURRENCY_CODES, CurrencyCode } from '../common/currency-codes';
 import { getProjectId } from '../common/utils';
 
 const getSelectedTab = () =>
@@ -12,19 +17,24 @@ const getSelectedTab = () =>
 interface PopupState {
 	toolbarColor: string | undefined;
 	projectId: string | undefined;
+	currencyCode: CurrencyCode | undefined;
 }
 
 class Popup extends React.Component<{}, PopupState> {
 	public state = {
 		toolbarColor: undefined,
 		projectId: undefined,
+		currencyCode: undefined,
 	};
+
+	private currencyMenuItems = CURRENCY_CODES.map(code => ({ label: code, value: code }));
 
 	public async componentDidMount() {
 		const currentTab = await getSelectedTab();
 		const projectId = getProjectId(currentTab.url);
 		const toolbarColor = await configService.getCustomToolbarColor(projectId);
-		this.setState({ projectId, toolbarColor });
+		const currencyCode = await configService.getCurrencyCode();
+		this.setState({ projectId, toolbarColor, currencyCode });
 	}
 
 	private onColorChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -41,6 +51,11 @@ class Popup extends React.Component<{}, PopupState> {
 	private resetColor() {
 		this.setState({ toolbarColor: undefined });
 		configService.setCustomToolbarColor(this.state.projectId, undefined);
+	}
+
+	private setCurrencyCode(currencyCode: CurrencyCode) {
+		this.setState({ currencyCode });
+		configService.setCurrencyCode(currencyCode);
 	}
 
 	private sampleColor(color: string, label: string) {
@@ -85,6 +100,25 @@ class Popup extends React.Component<{}, PopupState> {
 							>
 								format_color_reset
 							</Button>
+						</div>
+						<Divider style={{ marginTop: '8px', marginBottom: '8px' }} />
+						<div className='currency-row'>
+							<div className='md-caption'>Currency preference: {this.state.currencyCode || 'USD'}</div>
+							<Autocomplete
+								id='currency-select'
+								label='Currency preference'
+								data={[...CURRENCY_CODES]}
+								fullWidth
+								onChange={code => this.setCurrencyCode(code as CurrencyCode)}
+								filter={Autocomplete.caseInsensitiveFilter}
+							/>
+							<SelectField
+								id='currency-selector'
+								label='Currency preference'
+								menuItems={[...CURRENCY_CODES]}
+								position={SelectField.Positions.TOP_LEFT}
+								dropdownIcon={<FontIcon>attach_money</FontIcon>}
+							/>
 						</div>
 					</div>
 				)}
