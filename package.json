@@ -40,9 +40,9 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
-    "react-md": "^1.4.1"
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-md": "^7.0.2"
   },
   "browserlist": [
     "last 2 Chrome versions"
